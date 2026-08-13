@@ -1,0 +1,101 @@
+# =============================================================================
+# Threat Model - Per-System Working File
+# Program Capstone Cibenda
+#
+# INSTRUCTIONS FOR TECH LEADS:
+#   1. Copy this file and rename to: threat-model-<system>.yaml
+#      e.g. threat-model-SIGAP.yaml / threat-model-SID.yaml / threat-model-ecommerce.yaml
+#   2. Read THREAT_MODEL_TEMPLATE.md before filling this in.
+#   3. Fill `system_info` first, then `dfd_elements`, then `trust_boundaries`,
+#      then `stride_findings`.
+#   4. Do not delete the example rows until you have replaced them - use them
+#      as a formatting reference, then remove before submitting for review.
+#   5. Submit for DevOps Coordinator review at G3 (Architecture Review) at
+#      the latest.
+# =============================================================================
+
+document_id: "AWG-SEC-003"
+version: "1.0.0"
+policy_reference: "SECURITY_BASELINE_POLICY.md"
+methodology_reference: "THREAT_MODEL_TEMPLATE.md"
+
+system_info:
+  system_name: ""            # e.g. "SIGAP"
+  tech_lead: ""
+  last_updated: ""
+  program_gate_at_submission: ""   # e.g. "G3"
+
+# -----------------------------------------------------------------------------
+# DFD ELEMENT INVENTORY
+# List every External Entity, Process, Data Store, and Data Flow in your
+# system. This is your asset/component inventory before threats are applied.
+# -----------------------------------------------------------------------------
+dfd_elements:
+  external_entities:
+    - name: ""                 # e.g. "Warga (citizen, unauthenticated)"
+      description: ""
+      trust_level: ""          # e.g. "untrusted", "authenticated-low-privilege"
+
+  processes:
+    - name: ""                 # e.g. "Approve/reject at RT stage"
+      description: ""
+      data_classification_touched: []   # e.g. ["PII - Restricted"]
+
+  data_stores:
+    - name: ""                 # e.g. "PostgreSQL - letters table"
+      description: ""
+      data_classification: ""  # one of: "PII - Restricted", "Operational - Internal",
+                                # "Transactional - Restricted", "Public"
+
+  data_flows:
+    - name: ""                 # e.g. "Citizen submits surat request"
+      source: ""
+      destination: ""
+      data_classification: ""
+      crosses_trust_boundary: false   # true/false
+
+# -----------------------------------------------------------------------------
+# TRUST BOUNDARIES
+# List every trust boundary in your system. Minimum required boundaries are
+# defined in THREAT_MODEL_TEMPLATE.md Section 2.2 - add system-specific ones
+# as needed.
+# -----------------------------------------------------------------------------
+trust_boundaries:
+  - boundary_id: "TB-01"
+    description: ""            # e.g. "Public visitor -> authenticated citizen session"
+    elements_involved: []      # list of dfd_element names on either side
+
+# -----------------------------------------------------------------------------
+# STRIDE FINDINGS
+# One entry per identified threat. Prioritize elements touching Tier 1/3 data
+# and elements crossing trust boundaries. See THREAT_MODEL_TEMPLATE.md Section 3
+# for a fully worked example before filling this in.
+# -----------------------------------------------------------------------------
+stride_findings:
+
+  - finding_id: "EXAMPLE-01"   # replace ID scheme with e.g. SID-001, SIGAP-001
+    element: ""                 # which dfd_element this applies to
+    trust_boundary_ref: ""      # boundary_id from above, if applicable
+    stride_category: ""         # one of: Spoofing, Tampering, Repudiation,
+                                 # Information Disclosure, Denial of Service,
+                                 # Elevation of Privilege
+    threat_description: ""      # concrete, specific - not generic
+    likelihood: ""               # low | medium | high
+    impact: ""                   # low | medium | high
+    risk_rating: ""               # low | medium | high
+    mitigation: ""               # required - "no mitigation identified" is
+                                  # acceptable if reasoned, but must not be blank
+    mitigation_status: "not_started"   # not_started | in_progress | done
+    owner: ""
+    verification_evidence: ""    # link/reference once mitigation is implemented
+
+# -----------------------------------------------------------------------------
+# SUBMISSION CHECKLIST (self-check before requesting DevOps Coordinator review)
+# -----------------------------------------------------------------------------
+submission_checklist:
+  all_dfd_elements_inventoried: false
+  minimum_trust_boundaries_covered: false
+  every_trust_boundary_crossing_has_at_least_one_finding: false
+  every_finding_has_nonblank_mitigation: false
+  likelihood_impact_risk_filled_using_shared_scale: false
+  ready_for_devops_coordinator_review: false

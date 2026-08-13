@@ -1,0 +1,415 @@
+# =============================================================================
+# Security Baseline Control Matrix
+# Program Capstone Cibenda - SIGAP, SID, E-Commerce (CibendaMart)
+#
+# Document ID: AWG-SEC-001-CTRL
+# Version: 1.0.0
+# Owner: DevOps Coordinator (Architecture Working Group)
+# Companion to: SECURITY_BASELINE_POLICY.md
+#
+# Purpose:
+#   Each control below must be assigned an owner (per-system Tech Lead) and
+#   a status. Tech Leads update `status` and `verification_evidence`.
+#   DevOps Coordinator reviews `verification_evidence` before approving a
+#   control as "done" - do not mark done based on self-report alone.
+#
+# Status values: not_started | in_progress | done | not_applicable
+# Severity values: critical | high | medium | low
+#   (severity = impact if this control is absent, not effort to implement)
+# =============================================================================
+
+metadata:
+  program: "Capstone Cibenda"
+  systems:
+    - SIGAP
+    - SID
+    - E-Commerce
+  policy_reference: "SECURITY_BASELINE_POLICY.md"
+  last_updated: "PENDING_FIRST_REVIEW"
+  review_gate_checkpoints: ["G3", "G5", "G7"]
+
+controls:
+
+  # ---------------------------------------------------------------------
+  # 1. Authentication
+  # ---------------------------------------------------------------------
+  - control_id: AUTH-001
+    category: authentication
+    requirement: >
+      Authentication implemented via vetted framework mechanism only
+      (Laravel Sanctum for SID, Firebase Auth for SIGAP, equivalent for
+      E-Commerce). No custom-rolled authentication logic.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: AUTH-002
+    category: authentication
+    requirement: >
+      Passwords hashed with bcrypt or argon2id at framework default cost
+      factor or higher. No plaintext or reversible encryption of passwords.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: AUTH-003
+    category: authentication
+    requirement: >
+      Session/token expiry and idle timeout configured for all roles with
+      approval authority (RT, RW, Kadus, Kasi, Kaur, Petugas Desa).
+    applies_to: [SID]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: AUTH-004
+    category: authentication
+    requirement: >
+      MFA enforced for Petugas Desa, Kasi Pelayanan, Kaur TU, and all
+      DevOps/infrastructure administrator accounts.
+    applies_to: [SID]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: AUTH-005
+    category: authentication
+    requirement: >
+      MFA recommended (target: required at next maturity phase) for
+      RT/RW/Kadus roles.
+    applies_to: [SID]
+    severity: medium
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  # ---------------------------------------------------------------------
+  # 2. Authorization
+  # ---------------------------------------------------------------------
+  - control_id: AUTHZ-001
+    category: authorization
+    requirement: >
+      Server-side role-based access control enforced on every request;
+      client-side hiding of actions is not treated as an access control.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: AUTHZ-002
+    category: authorization
+    requirement: >
+      Every approve/reject endpoint in the SID letter workflow independently
+      re-validates actor role AND jurisdiction (rt_id / rw_id / hamlet_id)
+      matches the target resource, regardless of UI-side gating.
+    applies_to: [SID]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: AUTHZ-003
+    category: authorization
+    requirement: >
+      Service accounts (Firebase Cloud Functions proxy, backend service
+      credentials) scoped to least privilege, not project-wide admin rights.
+    applies_to: [SIGAP]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  # ---------------------------------------------------------------------
+  # 3. Network Segmentation
+  # ---------------------------------------------------------------------
+  - control_id: NET-001
+    category: network_segmentation
+    requirement: >
+      SIGAP, SID, and E-Commerce use separate database instances (no shared
+      DB), consistent with independent-domain architecture decision.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: NET-002
+    category: network_segmentation
+    requirement: >
+      If co-hosted on shared infrastructure, each system runs under a
+      separate OS-level user account or container, with deny-by-default
+      firewall rules between systems.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: NET-003
+    category: network_segmentation
+    requirement: >
+      Administrative interfaces (DB admin, SSH, hosting control panel) are
+      not exposed to the public internet without IP allow-listing or a
+      VPN/bastion layer, on both Desa (production) and Kampus (staging).
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: NET-004
+    category: network_segmentation
+    requirement: >
+      Village Dashboard integration connects only through a documented,
+      authenticated, read-only API contract per system - no direct DB
+      access or credential sharing across systems.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  # ---------------------------------------------------------------------
+  # 4. Secrets Management
+  # ---------------------------------------------------------------------
+  - control_id: SEC-001
+    category: secrets_management
+    requirement: >
+      No credentials (Firebase keys, DB credentials, API keys, session
+      secrets) committed to Git, including commit history. .env and
+      equivalents .gitignore'd from first commit.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: SEC-002
+    category: secrets_management
+    requirement: >
+      Secrets stored via environment variables or hosting-provider secret
+      store, not hardcoded in source or shared via unencrypted chat.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: SEC-003
+    category: secrets_management
+    requirement: >
+      Any accidentally exposed credential is rotated immediately (not only
+      removed from visible file/history).
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: SEC-004
+    category: secrets_management
+    requirement: >
+      Credential rotation cadence formalized (recommended: per phase gate
+      or on team member offboarding). Open item pending DevOps Coordinator.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: medium
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  # ---------------------------------------------------------------------
+  # 5. Transport Security
+  # ---------------------------------------------------------------------
+  - control_id: TLS-001
+    category: transport_security
+    requirement: >
+      HTTPS mandatory on all production and staging endpoints, including
+      internal Village Dashboard <-> system API calls. No plaintext HTTP
+      for authenticated sessions or Tier 1/3 data.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: TLS-002
+    category: transport_security
+    requirement: >
+      Edge devices (ESP8266/ESP32) submit data only (no read/query access);
+      all edge-submitted data is treated as untrusted input and validated
+      server-side before influencing dashboard state or automated actions.
+    applies_to: [SIGAP]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: TLS-003
+    category: transport_security
+    requirement: >
+      TLS certificates auto-renew where hosting platform supports it;
+      certificate expiry is monitored, not manually tracked ad hoc.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: medium
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  # ---------------------------------------------------------------------
+  # 6. Logging and Monitoring
+  # ---------------------------------------------------------------------
+  - control_id: LOG-001
+    category: logging_monitoring
+    requirement: >
+      Authentication events, authorization failures, and all state-changing
+      actions on Tier 1 data logged with actor identity, timestamp, action.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: LOG-002
+    category: logging_monitoring
+    requirement: >
+      No raw Tier 1 or Tier 3 data (e.g. full NIK, full letter content) in
+      application/error logs. Reference IDs logged instead of payload.
+    applies_to: [SID, E-Commerce]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: LOG-003
+    category: logging_monitoring
+    requirement: >
+      Log retention period defined per system (starting recommendation:
+      90 days for security-relevant logs), confirmed against hosting
+      storage constraints.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: low
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  # ---------------------------------------------------------------------
+  # 7. Backup and Recovery
+  # ---------------------------------------------------------------------
+  - control_id: BAK-001
+    category: backup_recovery
+    requirement: >
+      Regular backup of SID citizen data and approval records defined
+      before G6 (UAT Ready), with retention period documented.
+    applies_to: [SID]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: BAK-002
+    category: backup_recovery
+    requirement: >
+      SIGAP offline local-storage capacity limits and overwrite behavior
+      documented and tested as part of offline resilience evaluation.
+    applies_to: [SIGAP]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: BAK-003
+    category: backup_recovery
+    requirement: >
+      Backup files receive the same data-classification-based protection
+      as the live data they contain (e.g. Tier 1 backups are not stored
+      unencrypted on shared/personal infrastructure).
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: BAK-004
+    category: backup_recovery
+    requirement: >
+      Recovery procedure tested at least once before SID production go-live.
+    applies_to: [SID]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  # ---------------------------------------------------------------------
+  # 8. Third-Party / Platform Risk
+  # ---------------------------------------------------------------------
+  - control_id: TPR-002
+    category: third_party_risk
+    requirement: >
+      Public/static dashboard data files (src/data/*.json on Vercel)
+      reviewed to confirm no Tier 1/3 data is inadvertently exposed.
+    applies_to: [SIGAP, SID]
+    severity: critical
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  # ---------------------------------------------------------------------
+  # 9. Incident Response (baseline scaffolding)
+  # ---------------------------------------------------------------------
+  - control_id: IR-001
+    category: incident_response
+    requirement: >
+      Designated role-based point of contact for reporting suspected
+      security incidents is documented and communicated to all team members.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: IR-002
+    category: incident_response
+    requirement: >
+      Escalation path (Developer -> Tech Lead -> DevOps Coordinator ->
+      Program Coordinator) documented for incidents involving Tier 1/3 data.
+    applies_to: [SIGAP, SID, E-Commerce]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+  - control_id: IR-003
+    category: incident_response
+    requirement: >
+      UU PDP breach notification obligations (to data subjects and, where
+      required, supervisory authority) understood and documented before
+      an incident occurs - not designed reactively.
+    applies_to: [SID]
+    severity: high
+    status: not_started
+    owner: ""
+    verification_evidence: ""
+
+# =============================================================================
+# Summary rollup (to be computed/updated at each gate review, not hand-edited
+# ahead of actual control status changes above)
+# =============================================================================
+summary:
+  total_controls: 27
+  by_status:
+    not_started: 27
+    in_progress: 0
+    done: 0
+    not_applicable: 0
+  by_severity:
+    critical: 12
+    high: 11
+    medium: 3
+    low: 1
