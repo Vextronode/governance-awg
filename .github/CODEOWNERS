@@ -1,0 +1,9 @@
+# Pemilik path normatif governance-awg (RFC-0001 N.4): AWG.
+# Username GitHub tidak boleh dikarang.
+#
+# TODO(awg): isi username GitHub para Coordinator AWG, lalu hapus tanda komentar pada tiga baris di bawah.
+#            Lihat rfc/OPEN-QUESTIONS.md butir 8.
+#
+# /catalog/       @<username-coordinator> @<username-coordinator>
+# /00-framework/  @<username-coordinator> @<username-coordinator>
+# /seeds/         @<username-coordinator> @<username-coordinator>
