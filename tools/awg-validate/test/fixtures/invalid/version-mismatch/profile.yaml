@@ -1,0 +1,74 @@
+# Fixture invalid (version-mismatch).
+awg_version: v2.1.0
+system:
+  id: SID
+  name: Sistem Uji
+  repo: https://example.invalid/sid
+  tech_lead: Ani
+  team:
+    - Ani
+    - Budi
+stack:
+  backend: Laravel
+  frontend: React
+  database: PostgreSQL
+  runtime_versions:
+    php: "8.3"
+    node: "20"
+  other: []
+adoption:
+  date: 2026-10-20
+  gate_at_adoption: G3
+current_gate: G3
+environments:
+  production:
+    hosting: Hosting uji
+    url: https://example.invalid
+    managed_by: Mitra uji
+  staging:
+    hosting: Hosting uji
+    url: https://staging.example.invalid
+    managed_by: Tim uji
+hosting_assessment:
+  cpu: 2 vCPU
+modules:
+  active:
+    - id: CMS
+      reason: Admin menerbitkan berita desa
+      evidence:
+        - app/Models/Post.php
+  inactive:
+    - id: PWA
+      reason: Tidak ada service worker
+critical_paths:
+  - id: CP-01
+    name: Login
+    tests:
+      - tests/Feature/LoginTest.php
+    log_events:
+      - login_succeeded
+  - id: CP-02
+    name: Ajukan surat
+    tests:
+      - tests/Feature/LetterTest.php
+    log_events:
+      - letter_submitted
+  - id: CP-03
+    name: Approval surat
+    tests:
+      - tests/Feature/ApprovalTest.php
+    log_events:
+      - letter_approval_created
+performance:
+  expected_peak_concurrent_users: 50
+  basis: Estimasi uji
+  overrides: []
+security:
+  idle_timeout_minutes: 30
+observability:
+  error_alert_threshold: 10 ERROR per 5 menit
+  business_metrics:
+    - surat diproses per hari
+contacts:
+  incident_tech: tim-uji@example.invalid
+  data_controller_contact: mitra-uji@example.invalid

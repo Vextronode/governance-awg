@@ -1,0 +1,66 @@
+catalog: module
+module: PII
+version: 2.0.0
+title: Data pribadi Tier 1
+applies_when: Sistem menyimpan data pribadi Tier 1 (NIK, KK, nama+alamat, nomor HP, alamat pengiriman) milik warga atau pengguna.
+detection_hints: [kolom nik/no_kk/phone/address di migration, formulir pendaftaran warga/pembeli]
+controls:
+  - id: MOD-PII-001
+    module: PII
+    title: Log akses baca data pribadi oleh petugas
+    statement: >-
+      Akses petugas/admin ke halaman detail data pribadi Tier 1 milik orang lain WAJIB dicatat (actor, subjek berupa ID referensi, waktu).
+    rationale: Mendeteksi penyalahgunaan oleh orang dalam (B.1 #2).
+    severity: high
+    class: waivable
+    gate: G5
+    verification: Sampel log akses di staging.
+    evidence: [code, screenshot]
+  - id: MOD-PII-002
+    module: PII
+    title: Masking identitas di tampilan daftar
+    statement: >-
+      NIK dan No. KK WAJIB ditampilkan tersamarkan di daftar dan tabel (mis. 3201********0001); nilai penuh hanya pada detail
+      untuk peran yang berwenang.
+    rationale: Mengurangi eksposur lewat layar dan screenshot.
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Screenshot daftar dan detail per peran.
+    evidence: [screenshot]
+  - id: MOD-PII-003
+    module: PII
+    title: Ekspor data pribadi terkontrol
+    statement: >-
+      Ekspor (Excel/PDF/CSV) berisi data pribadi WAJIB dibatasi peran berwenang, dicatat di log audit, dan file hasil ekspor
+      WAJIB tidak disimpan di storage publik.
+    rationale: Ekspor adalah jalur kebocoran massal termudah.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Uji ekspor oleh peran tidak berwenang ditolak; lokasi file ekspor.
+    evidence: [code, test]
+  - id: MOD-PII-004
+    module: PII
+    title: Enkripsi at-rest kolom identitas
+    statement: >-
+      Kolom NIK dan No. KK SEBAIKNYA dienkripsi di level aplikasi (mis. cast encrypted Laravel) dengan blind index bila perlu
+      pencarian; minimal, volume disk dan backup WAJIB terenkripsi (DATA-002).
+    rationale: Membatasi dampak bila dump DB bocor.
+    severity: medium
+    class: waivable
+    gate: G6
+    verification: Skema/cast kolom atau dokumentasi keputusan (ADR) bila tidak dienkripsi.
+    evidence: [code, document]
+  - id: MOD-PII-005
+    module: PII
+    title: Penonaktifan dan penghapusan akun
+    statement: >-
+      WAJIB terdefinisi apa yang terjadi pada data pribadi saat akun dinonaktifkan atau dihapus (dihapus, dianonimkan, atau
+      disimpan karena kewajiban arsip, dengan alasan), selaras PRIV-006/007.
+    rationale: Hak penghapusan berbenturan dengan kewajiban arsip administrasi desa; harus diputuskan eksplisit.
+    severity: medium
+    class: waivable
+    gate: G7
+    verification: Dokumen keputusan + implementasi.
+    evidence: [document, code]

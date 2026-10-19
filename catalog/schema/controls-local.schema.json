@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Vextronode/governance-awg/catalog/schema/controls-local.schema.json",
+  "title": "AWG v2 docs/awg/controls-local.yaml",
+  "description": "Kontrol SYS-<SYSTEM>-NNN (RFC-0001 M.4): format sama dengan katalog (C.2), ditambah field opsional conditional dan source. Kecocokan prefix SYS dengan system.id profil, keunikan ID, dan aturan C.3 ditegakkan di tools/awg-validate.",
+  "type": "object",
+  "properties": {
+    "awg_version": { "type": "string" },
+    "system": { "type": "string", "pattern": "^([A-Z][A-Z0-9]*)?$" },
+    "controls": { "type": "array", "items": { "$ref": "#/$defs/sysControl" } }
+  },
+  "required": ["controls"],
+  "additionalProperties": false,
+  "$defs": {
+    "sysControl": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^SYS-[A-Z][A-Z0-9]*-\\d{3}$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "statement": { "type": "string", "pattern": "(WAJIB|SEBAIKNYA|BOLEH)" },
+        "rationale": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["critical", "high", "medium", "low"] },
+        "class": { "enum": ["non_waivable", "waivable"] },
+        "gate": { "enum": ["G3", "G4", "G5", "G6", "G7"] },
+        "verification": { "type": "string", "minLength": 1 },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["code", "config", "test", "ci_run", "document", "screenshot", "report"] }
+        },
+        "refs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "supersedes": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^(AUTH|AUTHZ|NET|SEC|TLS|LOG|BAK|TPR|IR)-\\d{3}$" }
+        },
+        "deprecated": { "type": "boolean" },
+        "conditional": { "type": "boolean" },
+        "source": { "enum": ["seed", "team"] }
+      },
+      "required": ["id", "title", "statement", "rationale", "severity", "class", "gate", "verification", "evidence"],
+      "additionalProperties": false
+    }
+  }
+}

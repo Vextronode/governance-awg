@@ -1,0 +1,57 @@
+# Peran
+
+| Field | Nilai |
+|---|---|
+| Dokumen | 00-framework/08-roles.md |
+| Versi | 2.0.0 |
+| Status | Berlaku |
+| Pemilik | Architecture Working Group (AWG) |
+| Sumber | RFC-0001 Bagian J (rotasi verifikator dari Bagian E.2) |
+
+---
+
+## 1. Matriks tanggung jawab
+
+| Aktivitas | Tech Lead sistem | Developer | Verifikator rotasi | DevOps Coord. | QA Coord. | Program Coord. | Documentation Coord. |
+|---|---|---|---|---|---|---|---|
+| Memelihara katalog & framework (repo pusat) | C | – | – | R (SEC/OBS/PERF/REL/DATA/MAINT) | R (QA) | A | R (struktur dokumen) |
+| Profil, status, threat model sistem | A/R | R | – | C | C | I | – |
+| Implementasi kontrol | A | R | – | C | C | – | – |
+| Verifikasi kontrol | – | – | R | R (critical teknis) | R (critical QA) | R (critical PRIV/GOV) | – |
+| Persetujuan waiver | Pengaju | – | – | A (domainnya) | A (QA) | A | – |
+| Keputusan gate | Pengaju | – | I | C | C | A | I |
+| Insiden | R | R | – | A (teknis) | I | A (notifikasi ke mitra) | – |
+
+R = Responsible, A = Accountable, C = Consulted, I = Informed.
+
+## 2. Aturan konflik kepentingan
+
+1. Tidak ada yang memverifikasi kontrol pada sistem tempat ia menjadi anggota tim.
+2. Coordinator yang juga anggota tim sebuah sistem tidak boleh menyetujui waiver untuk sistem tersebut. Penggantinya ditunjuk Program Coordinator.
+
+## 3. Rotasi verifikator
+
+Rotasi default ([03-verification-and-gates.md](03-verification-and-gates.md) §2):
+
+| Sistem yang diverifikasi | Tim verifikator rotasi |
+|---|---|
+| SID | CIMART |
+| CIMART | SIGAP |
+| SIGAP | VDASH |
+| VDASH | SID |
+
+Rotasi boleh diubah oleh AWG. Setiap perubahan dicatat di bagian ini.
+
+Riwayat perubahan rotasi: belum ada (rotasi default berlaku).
+
+## 4. Verifikasi ganda kontrol critical
+
+Kontrol `critical` membutuhkan **dua** verifikasi: satu dari tim rotasi dan satu dari Coordinator domain:
+
+| Lapis / domain | Coordinator verifikator kedua |
+|---|---|
+| SEC, REL, DATA, OBS, PERF, MAINT, dan modul teknis | DevOps Coordinator |
+| QA | QA Coordinator |
+| PRIV, GOV | Program Coordinator |
+
+Program Coordinator memutuskan gate dan menyetujui waiver, tetapi **tidak** menjadi verifikator tunggal kontrol non-PRIV/GOV.

@@ -1,0 +1,1130 @@
+catalog: baseline
+version: 2.0.0
+controls:
+
+  # ---------------- GOV ----------------
+  - id: BASE-GOV-001
+    domain: GOV
+    title: Threat model sistem diajukan dan direview
+    statement: >-
+      Setiap sistem WAJIB memiliki docs/awg/threat-model.yaml (DFD + STRIDE, skala risiko F.3)
+      yang mencakup seluruh trust boundary minimum dan telah direview DevOps Coordinator.
+    rationale: Ancaman harus dikenali sebelum dimitigasi; menggantikan AWG-SEC-002/003.
+    severity: high
+    class: non_waivable
+    gate: G3
+    verification: >-
+      Validator lulus untuk threat-model.yaml; setiap perlintasan trust boundary punya >=1 finding;
+      ada catatan review DevOps Coordinator (tanggal + nama) di file.
+    evidence: [document]
+    supersedes: []
+
+  - id: BASE-GOV-002
+    domain: GOV
+    title: Tidak ada risiko critical/high yang belum dimitigasi saat UAT
+    statement: >-
+      Saat klaim G6, threat model WAJIB tidak memiliki finding dengan rating critical atau high
+      yang mitigation_status-nya not_started.
+    rationale: Memperbaiki aturan v1 yang merujuk rating "critical" yang tidak ada di skala.
+    severity: high
+    class: non_waivable
+    gate: G6
+    verification: Validator gate G6 lulus untuk threat-model.yaml.
+    evidence: [document]
+
+  - id: BASE-GOV-003
+    domain: GOV
+    title: Profil AWG akurat dan mutakhir
+    statement: >-
+      docs/awg/profile.yaml dan status.yaml WAJIB mencerminkan kondisi aktual (stack, modul aktif
+      beserta bukti, anggota tim, critical paths) dan WAJIB lulus validator sebelum setiap klaim gate.
+    rationale: Kepatuhan tidak bisa dinilai dari profil yang salah.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: >-
+      Verifikator mencocokkan modul aktif/tidak aktif dengan kode (bukti path) dan menjalankan validator.
+    evidence: [document, ci_run]
+
+  - id: BASE-GOV-004
+    domain: GOV
+    title: Laporan verifikasi per gate
+    statement: >-
+      Setiap klaim gate (G3-G7) WAJIB disertai laporan docs/awg/reports/gate-<Gx>-<tanggal>.md
+      berbasis template verification-report.md, berisi output validator dan daftar waiver aktif.
+    rationale: Jejak audit keputusan gate.
+    severity: medium
+    class: non_waivable
+    gate: G5
+    verification: File laporan ada untuk setiap gate yang diklaim sejak adopsi.
+    evidence: [report]
+
+  # ---------------- SEC ----------------
+  - id: BASE-SEC-001
+    domain: SEC
+    title: Autentikasi memakai mekanisme framework/library teruji
+    statement: >-
+      Autentikasi WAJIB memakai mekanisme framework atau library yang teruji dan terpelihara
+      (mis. Laravel Sanctum/Fortify; untuk Express: library mapan untuk session atau JWT).
+      Logika kriptografi dan penyimpanan kredensial buatan sendiri dilarang.
+    rationale: Autentikasi buatan sendiri adalah sumber kerentanan klasik.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Review kode modul auth; daftar dependency auth dan versinya.
+    evidence: [code]
+    refs: ["ASVS - Authentication"]
+    supersedes: [AUTH-001]
+
+  - id: BASE-SEC-002
+    domain: SEC
+    title: Password di-hash dengan algoritma adaptif
+    statement: >-
+      Password WAJIB di-hash dengan bcrypt atau argon2id pada cost default framework atau lebih tinggi.
+      Plaintext dan enkripsi reversibel dilarang.
+    rationale: Membatasi dampak bila database bocor.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Cek konfigurasi hashing dan sampel kolom password di DB staging (format hash).
+    evidence: [code, config]
+    refs: ["ASVS - Authentication"]
+    supersedes: [AUTH-002]
+
+  - id: BASE-SEC-003
+    domain: SEC
+    title: Masa berlaku sesi/token dan logout server-side
+    statement: >-
+      Sesi dan token WAJIB memiliki masa berlaku. Logout WAJIB menginvalidasi sesi/token di server.
+      Peran dengan wewenang approval atau admin WAJIB memiliki idle timeout (nilai ditetapkan di profil, maksimal 60 menit).
+    rationale: Mengurangi risiko sesi dicuri atau ditinggal terbuka di perangkat bersama kantor desa.
+    severity: high
+    class: waivable
+    gate: G5
+    verification: Uji manual - token lama ditolak setelah logout; idle timeout terjadi sesuai konfigurasi.
+    evidence: [config, test]
+    supersedes: [AUTH-003]
+
+  - id: BASE-SEC-004
+    domain: SEC
+    title: Proteksi brute-force pada endpoint autentikasi
+    statement: >-
+      Endpoint login, reset password, dan verifikasi OTP WAJIB diberi rate limit per akun dan per IP
+      (default maksimal 5 percobaan gagal per menit) dan percobaan gagal WAJIB dicatat di log keamanan.
+    rationale: Brute-force adalah ancaman commodity (B.1 #1); di v1 hanya berstatus rekomendasi.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Test otomatis atau uji manual - percobaan ke-6 dalam 1 menit ditolak (HTTP 429).
+    evidence: [code, test]
+    refs: ["ASVS - Authentication"]
+
+  - id: BASE-SEC-005
+    domain: SEC
+    title: Otorisasi server-side, deny-by-default, cek kepemilikan objek
+    statement: >-
+      Setiap request WAJIB diotorisasi di server berdasarkan peran DAN kepemilikan/yurisdiksi objek
+      (mencegah IDOR). Akses yang tidak diizinkan eksplisit WAJIB ditolak. Menyembunyikan tombol di UI
+      bukan kontrol akses.
+    rationale: Eskalasi hak dan IDOR adalah risiko utama sistem multi-peran.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: >-
+      Matriks uji otorisasi (peran x endpoint sensitif) termasuk akses objek milik pengguna lain;
+      test negatif otomatis untuk endpoint Tier 1/3.
+    evidence: [code, test]
+    refs: ["ASVS - Access Control"]
+    supersedes: [AUTHZ-001]
+
+  - id: BASE-SEC-006
+    domain: SEC
+    title: Validasi input server-side dan query terparameterisasi
+    statement: >-
+      Semua input WAJIB divalidasi di server (tipe, panjang, format, nilai yang diizinkan).
+      Akses database WAJIB memakai ORM/query builder atau parameterized query; penyusunan SQL dengan
+      penggabungan string dari input pengguna dilarang.
+    rationale: Mencegah injection dan data korup.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Grep raw query (DB::raw, whereRaw, string template SQL) dan review masing-masing; cek validator per endpoint tulis.
+    evidence: [code]
+    refs: ["ASVS - Validation, Sanitization and Encoding"]
+
+  - id: BASE-SEC-007
+    domain: SEC
+    title: Pencegahan XSS
+    statement: >-
+      Output WAJIB di-escape secara default. Rendering HTML mentah (dangerouslySetInnerHTML, {!! !!})
+      hanya BOLEH untuk konten yang sudah disanitasi dengan sanitizer allowlist (mis. DOMPurify/HTMLPurifier)
+      dan setiap pemakaiannya tercatat di review.
+    rationale: Stored XSS dari konten admin/penjual dapat mengambil alih sesi petugas.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Grep pemakaian render HTML mentah; tiap temuan punya sanitasi.
+    evidence: [code]
+
+  - id: BASE-SEC-008
+    domain: SEC
+    title: CSRF dan CORS
+    statement: >-
+      Autentikasi berbasis cookie WAJIB dilindungi CSRF. CORS WAJIB memakai allowlist origin eksplisit;
+      wildcard (*) bersama credentials dilarang.
+    rationale: Mencegah aksi atas nama pengguna dari situs lain.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Cek konfigurasi CORS/CSRF; uji request lintas origin ditolak.
+    evidence: [config, test]
+
+  - id: BASE-SEC-009
+    domain: SEC
+    title: Security headers
+    statement: >-
+      Respons production WAJIB menyertakan HSTS, X-Content-Type-Options: nosniff, proteksi framing
+      (frame-ancestors atau X-Frame-Options) dan Referrer-Policy. Content-Security-Policy SEBAIKNYA diterapkan.
+    rationale: Lapisan pertahanan murah terhadap clickjacking, sniffing, downgrade.
+    severity: medium
+    class: waivable
+    gate: G6
+    verification: Pemeriksaan header pada URL staging/production (curl -I atau scanner).
+    evidence: [screenshot, report]
+
+  - id: BASE-SEC-010
+    domain: SEC
+    title: Tidak ada secret di Git, termasuk history
+    statement: >-
+      Kredensial, API key, dan secret WAJIB tidak ada di repository maupun history-nya. .env dan
+      setaranya WAJIB di-.gitignore. Secret scanning (mis. gitleaks) WAJIB dijalankan atas seluruh history
+      sekali saat adopsi dan pada setiap PR di CI.
+    rationale: Kredensial terekspos adalah ancaman commodity utama.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Laporan scan history bersih (atau temuan sudah dirotasi per SEC-011); job CI secret scan aktif.
+    evidence: [report, ci_run]
+    supersedes: [SEC-001]
+
+  - id: BASE-SEC-011
+    domain: SEC
+    title: Rotasi segera atas secret yang terekspos
+    statement: >-
+      Secret yang pernah terekspos (commit, chat, screenshot) WAJIB segera dirotasi; menghapus dari file
+      atau history saja tidak cukup. Rotasi dicatat (tanggal, secret apa, oleh siapa - tanpa nilai secret).
+    rationale: Secret yang pernah publik harus dianggap sudah diketahui penyerang.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Log rotasi untuk setiap temuan scan SEC-010.
+    evidence: [document]
+    supersedes: [SEC-003]
+
+  - id: BASE-SEC-012
+    domain: SEC
+    title: Pengelolaan secret per environment dan saat pergantian anggota
+    statement: >-
+      Secret WAJIB disimpan sebagai environment variable atau secret store hosting, terpisah per
+      environment (dev/staging/production). Secret production WAJIB hanya diketahui peran yang tercatat,
+      dan WAJIB dirotasi saat anggota dengan akses keluar dari tim serta saat handoff (MAINT-006).
+    rationale: Memformalkan open item rotasi di v1.
+    severity: high
+    class: waivable
+    gate: G7
+    verification: Daftar secret (nama saja) + pemegang akses + tanggal rotasi terakhir.
+    evidence: [document, config]
+    supersedes: [SEC-002, SEC-004]
+
+  - id: BASE-SEC-013
+    domain: SEC
+    title: Audit kerentanan dependency di CI
+    statement: >-
+      CI WAJIB menjalankan audit kerentanan dependency (composer audit, npm audit) pada setiap PR dan
+      WAJIB gagal bila ada temuan high/critical tanpa waiver. Bot pembaruan dependency (Dependabot/Renovate)
+      SEBAIKNYA diaktifkan.
+    rationale: Dependency tidak di-patch adalah ancaman #1 di v1 tetapi tidak punya kontrol.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Konfigurasi CI + tautan run yang menunjukkan langkah audit.
+    evidence: [config, ci_run]
+    refs: ["OWASP Top 10 - Vulnerable and Outdated Components"]
+
+  - id: BASE-SEC-014
+    domain: SEC
+    title: Lockfile di-commit
+    statement: >-
+      Lockfile (composer.lock, package-lock.json atau setaranya) WAJIB di-commit dan instalasi di CI/production
+      WAJIB memakai lockfile (composer install, npm ci).
+    rationale: Build yang dapat direproduksi dan diaudit.
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Lockfile ada di repo; skrip CI/deploy memakai perintah berbasis lockfile.
+    evidence: [code, config]
+
+  - id: BASE-SEC-015
+    domain: SEC
+    title: Hardening konfigurasi production
+    statement: >-
+      Production WAJIB berjalan dengan mode debug mati (APP_DEBUG=false / NODE_ENV=production), tanpa stack
+      trace atau detail error ke klien, tanpa akun default/demo, dan tanpa seeder data demo.
+    rationale: Kebocoran informasi dan akun default adalah salah konfigurasi paling umum.
+    severity: critical
+    class: non_waivable
+    gate: G7
+    verification: Picu error di production-like env, pastikan respons generik; cek daftar akun.
+    evidence: [config, screenshot]
+
+  - id: BASE-SEC-016
+    domain: SEC
+    title: HTTPS di semua environment publik
+    statement: >-
+      Staging dan production WAJIB HTTPS dengan redirect HTTP->HTTPS, termasuk API antar sistem.
+      Sertifikat WAJIB diperpanjang otomatis bila platform mendukung, dan masa berlakunya WAJIB dimonitor (OBS-005).
+    rationale: Data Tier 1/3 tidak boleh lewat kanal plaintext.
+    severity: critical
+    class: non_waivable
+    gate: G7
+    verification: Uji akses HTTP ter-redirect; cek mekanisme renewal dan monitor sertifikat.
+    evidence: [config, screenshot]
+    supersedes: [TLS-001, TLS-003]
+
+  - id: BASE-SEC-017
+    domain: SEC
+    title: Antarmuka administratif tidak terekspos publik
+    statement: >-
+      Panel admin DB, SSH, dan panel hosting WAJIB tidak terbuka ke internet tanpa IP allowlist atau VPN/bastion.
+      SSH WAJIB berbasis key; login root dengan password dilarang.
+    rationale: Target scan otomatis paling umum.
+    severity: critical
+    class: non_waivable
+    gate: G7
+    verification: Scan port dari luar jaringan; cek konfigurasi sshd.
+    evidence: [config, report]
+    supersedes: [NET-003]
+
+  - id: BASE-SEC-018
+    domain: SEC
+    title: Isolasi database dan least privilege
+    statement: >-
+      Setiap sistem WAJIB memakai instance atau database terpisah dengan kredensial sendiri. User database
+      aplikasi WAJIB bukan superuser dan hanya punya hak yang dibutuhkan. Bila beberapa sistem berbagi host,
+      masing-masing WAJIB berjalan di user OS atau container terpisah dengan firewall deny-by-default antar sistem.
+    rationale: Kompromi satu sistem tidak boleh membuka sistem lain.
+    severity: critical
+    class: non_waivable
+    gate: G7
+    verification: Daftar user DB beserta grant; konfigurasi host/container.
+    evidence: [config]
+    supersedes: [NET-001, NET-002, AUTHZ-003]
+
+  - id: BASE-SEC-019
+    domain: SEC
+    title: Integrasi antar sistem hanya lewat API terdokumentasi
+    statement: >-
+      Pertukaran data antar sistem WAJIB melalui API terdokumentasi dan terautentikasi (modul PUBLIC-API/API-CONSUMER).
+      Akses langsung ke database sistem lain dan berbagi kredensial antar sistem dilarang.
+    rationale: Mempertahankan arsitektur independent-domain.
+    severity: critical
+    class: non_waivable
+    gate: G3
+    verification: Architecture document dan konfigurasi koneksi tidak memuat kredensial DB sistem lain.
+    evidence: [document, config]
+    supersedes: [NET-004]
+
+  - id: BASE-SEC-020
+    domain: SEC
+    title: Log peristiwa keamanan
+    statement: >-
+      Login berhasil/gagal, kegagalan otorisasi, perubahan peran/hak, dan semua aksi yang mengubah data Tier 1/3
+      WAJIB dicatat dengan actor, waktu, aksi, objek (ID referensi), dan hasil.
+    rationale: Investigasi dan non-repudiation.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Sampel entri log untuk tiap jenis peristiwa di staging.
+    evidence: [code, screenshot]
+    supersedes: [LOG-001]
+
+  - id: BASE-SEC-021
+    domain: SEC
+    title: MFA untuk akun administrator sistem dan infrastruktur
+    statement: >-
+      Akun administrator sistem (hak penuh) dan akun infrastruktur (hosting, DNS, repository, registrar domain)
+      WAJIB memakai MFA, disertai prosedur pemulihan terdokumentasi (recovery code tersimpan aman oleh mitra).
+    rationale: Akun paling berharga; tanpa prosedur pemulihan MFA mengunci mitra setelah handoff.
+    severity: high
+    class: waivable
+    gate: G7
+    verification: Screenshot pengaturan MFA per akun (tanpa secret) + dokumen prosedur pemulihan.
+    evidence: [screenshot, document]
+    supersedes: [AUTH-004]
+
+  - id: BASE-SEC-022
+    domain: SEC
+    title: Uji keamanan ringan sebelum UAT
+    statement: >-
+      Sebelum G6 WAJIB dilakukan: (1) scan otomatis OWASP ZAP baseline terhadap staging, dan (2) eksekusi matriks
+      uji otorisasi manual (peran x endpoint sensitif). Temuan high dicatat sebagai defect S1/S2.
+    rationale: Pengganti proporsional pentest formal.
+    severity: high
+    class: non_waivable
+    gate: G6
+    verification: Laporan ZAP + matriks uji terisi + tautan defect untuk temuan.
+    evidence: [report]
+
+  # ---------------- PRIV ----------------
+  - id: BASE-PRIV-001
+    domain: PRIV
+    title: Inventaris dan klasifikasi data
+    statement: >-
+      Setiap entitas/field di Data Dictionary (artefak G2) WAJIB diberi label Tier 1-4, dan field data pribadi
+      WAJIB ditandai beserta tujuan pemrosesannya.
+    rationale: Kontrol lain bergantung pada klasifikasi.
+    severity: high
+    class: non_waivable
+    gate: G3
+    verification: Data Dictionary memuat kolom tier dan tujuan untuk setiap field.
+    evidence: [document]
+
+  - id: BASE-PRIV-002
+    domain: PRIV
+    title: Minimisasi data
+    statement: >-
+      Sistem WAJIB hanya mengumpulkan data pribadi yang tujuannya terdokumentasi di PRIV-001. Field tanpa
+      tujuan WAJIB dihapus dari formulir dan skema.
+    rationale: Prinsip UU PDP; data yang tidak dikumpulkan tidak bisa bocor.
+    severity: medium
+    class: waivable
+    gate: G3
+    verification: Bandingkan formulir/skema dengan Data Dictionary.
+    evidence: [document, code]
+
+  - id: BASE-PRIV-003
+    domain: PRIV
+    title: Data Tier 1/3 tidak bocor ke kanal sekunder
+    statement: >-
+      Data Tier 1/3 WAJIB tidak muncul di log aplikasi/error, URL atau query string, browser localStorage/sessionStorage,
+      Cache Storage service worker, alat analitik/error tracker pihak ketiga, maupun file statis publik atau bundle frontend.
+      Logger WAJIB dikonfigurasi dengan redaksi field sensitif (minimal: password, token, nik, no_kk, phone, address).
+    rationale: Menggabungkan LOG-002 dan TPR-002 v1 serta menambah kanal yang terlewat.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Test redaksi logger; grep pemakaian storage browser; inspeksi bundle dan file publik.
+    evidence: [code, test]
+    supersedes: [LOG-002, TPR-002]
+
+  - id: BASE-PRIV-004
+    domain: PRIV
+    title: Tidak ada data pribadi asli di dev/staging
+    statement: >-
+      Environment dev dan staging WAJIB memakai data sintetis atau tersamarkan. Penggunaan data asli untuk UAT
+      hanya BOLEH dengan persetujuan tertulis mitra, dengan kontrol setara production, dan WAJIB dihapus
+      setelah UAT (dicatat tanggalnya).
+    rationale: Hosting kampus (staging) bukan tempat data warga.
+    severity: critical
+    class: non_waivable
+    gate: G6
+    verification: Cek seeder/factory dan sampel data staging; bila ada data asli, cek dokumen persetujuan dan bukti penghapusan.
+    evidence: [code, document]
+
+  - id: BASE-PRIV-005
+    domain: PRIV
+    title: Pemberitahuan privasi
+    statement: >-
+      Sebelum data pribadi dikumpulkan, aplikasi WAJIB menampilkan atau menautkan pemberitahuan privasi berbahasa
+      Indonesia yang memuat identitas Pengendali (mitra), tujuan, jenis data, masa retensi, dan kontak untuk hak subjek data.
+    rationale: Kewajiban transparansi UU PDP.
+    severity: high
+    class: waivable
+    gate: G6
+    verification: Screenshot halaman/tautan pada formulir pengumpulan data.
+    evidence: [screenshot]
+
+  - id: BASE-PRIV-006
+    domain: PRIV
+    title: Prosedur hak subjek data
+    statement: >-
+      WAJIB ada prosedur terdokumentasi (boleh manual oleh operator) untuk permintaan akses, perbaikan, dan
+      penghapusan data pribadi, termasuk siapa yang memproses dan cara memverifikasi identitas pemohon.
+    rationale: Hak subjek data UU PDP.
+    severity: medium
+    class: waivable
+    gate: G7
+    verification: Dokumen prosedur di book guide Admin/Operator.
+    evidence: [document]
+
+  - id: BASE-PRIV-007
+    domain: PRIV
+    title: Retensi data pribadi
+    statement: >-
+      Masa retensi per kategori data pribadi WAJIB ditetapkan bersama mitra dan dijalankan (otomatis, atau prosedur
+      manual terjadwal yang terdokumentasi).
+    rationale: Di v1 retensi hanya diatur untuk log.
+    severity: medium
+    class: waivable
+    gate: G7
+    verification: Tabel retensi + implementasi/prosedur.
+    evidence: [document, code]
+
+  - id: BASE-PRIV-008
+    domain: PRIV
+    title: Kedudukan Pengendali dan pemroses ditetapkan tertulis
+    statement: >-
+      Sebelum data pribadi riil diproses, kedudukan mitra sebagai Pengendali Data dan tim sebagai pihak yang memproses
+      atas namanya, beserta kontak resmi Pengendali untuk insiden, WAJIB disepakati tertulis.
+    rationale: Notifikasi Pasal 46 adalah kewajiban Pengendali; harus jelas sebelum insiden.
+    severity: high
+    class: non_waivable
+    gate: G6
+    verification: Dokumen kesepakatan/berita acara dengan mitra.
+    evidence: [document]
+
+  - id: BASE-PRIV-009
+    domain: PRIV
+    title: Kesiapan notifikasi kegagalan pelindungan data
+    statement: >-
+      Tim WAJIB memiliki kontak eskalasi terisi dan template incident-report serta draf notifikasi Pasal 46 siap pakai
+      sesuai timeline G.3, dan WAJIB menjalankan satu simulasi tabletop sebelum G7.
+    rationale: Batas 3x24 jam tidak bisa dipenuhi bila proses baru dirancang saat insiden.
+    severity: high
+    class: non_waivable
+    gate: G6
+    verification: Kontak terisi di runbook; catatan simulasi tabletop (tanggal, peserta, temuan).
+    evidence: [document]
+    supersedes: [IR-001, IR-002, IR-003]
+
+  # ---------------- QA ----------------
+  - id: BASE-QA-001
+    domain: QA
+    title: Critical paths terdefinisi
+    statement: >-
+      Profil sistem WAJIB mendaftar critical paths (alur yang bila gagal membuat sistem tidak berguna atau merusak data),
+      minimal 3, disetujui Program Coordinator.
+    rationale: Dasar untuk test wajib, monitoring, dan UAT.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Daftar di profile.yaml beserta tanda persetujuan.
+    evidence: [document]
+
+  - id: BASE-QA-002
+    domain: QA
+    title: Test otomatis untuk critical paths
+    statement: >-
+      Setiap critical path WAJIB memiliki test otomatis level integrasi/feature (mis. Laravel Feature test, supertest)
+      yang mencakup: alur sukses, penolakan otorisasi (peran/objek salah), dan penolakan validasi.
+      Laporan coverage SEBAIKNYA dihasilkan di CI.
+    rationale: Tanpa test, setiap perbaikan berisiko regresi diam-diam.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Pemetaan critical path -> file test; test lulus di CI.
+    evidence: [test, ci_run]
+
+  - id: BASE-QA-003
+    domain: QA
+    title: CI dan proteksi branch utama
+    statement: >-
+      Setiap PR WAJIB menjalankan CI (install berbasis lockfile, lint, test, build, SEC-010 secret scan, SEC-013 audit).
+      Branch utama WAJIB terproteksi: merge hanya lewat PR dengan CI hijau dan minimal 1 review dari orang selain penulis.
+    rationale: Penegakan otomatis lebih andal daripada disiplin manual.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Screenshot aturan proteksi branch + tautan run CI.
+    evidence: [config, ci_run, screenshot]
+
+  - id: BASE-QA-004
+    domain: QA
+    title: Klasifikasi defect bersama
+    statement: >-
+      Seluruh defect WAJIB diklasifikasikan S1-S4 sesuai framework 07 dan dilacak di issue tracker dengan label severity.
+    rationale: Exit criteria membutuhkan bahasa severity yang sama lintas tim.
+    severity: medium
+    class: non_waivable
+    gate: G5
+    verification: Issue tracker memakai label S1-S4.
+    evidence: [screenshot]
+
+  - id: BASE-QA-005
+    domain: QA
+    title: Exit criteria rilis dipenuhi
+    statement: >-
+      Klaim G6 dan G7 WAJIB memenuhi exit criteria framework 07 (I.2).
+    rationale: Mendefinisikan "siap rilis" secara objektif.
+    severity: critical
+    class: non_waivable
+    gate: G6
+    verification: Laporan gate memuat jumlah defect terbuka per severity dari issue tracker.
+    evidence: [report]
+
+  - id: BASE-QA-006
+    domain: QA
+    title: UAT oleh perwakilan pengguna nyata
+    statement: >-
+      UAT WAJIB dilakukan oleh perwakilan setiap peran pengguna nyata, memakai skenario per peran yang mencakup semua
+      critical path, di staging dengan data sesuai PRIV-004; hasil dicatat sesuai artefak G6 Program Gates.
+    rationale: Selaras G6 Program Gates; menambah cakupan per peran dan critical path.
+    severity: high
+    class: non_waivable
+    gate: G6
+    verification: Dokumen UAT execution berisi skenario per peran dan hasil.
+    evidence: [document]
+
+  - id: BASE-QA-007
+    domain: QA
+    title: Regresi dan smoke test sebelum deploy production
+    statement: >-
+      Sebelum setiap deploy production WAJIB: suite test otomatis lulus pada commit yang dirilis, dan setelah deploy
+      WAJIB dijalankan smoke test checklist (critical paths) di production.
+    rationale: Mencegah rilis merusak fitur yang sudah berjalan.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Go/no-go checklist terisi dengan tautan CI dan hasil smoke test.
+    evidence: [ci_run, document]
+
+  - id: BASE-QA-008
+    domain: QA
+    title: Matriks perangkat dan browser
+    statement: >-
+      Critical paths WAJIB diuji pada: Chrome Android (perangkat kelas menengah-bawah atau emulasi), serta Chrome
+      dan Firefox desktop terbaru; tampilan WAJIB responsif pada lebar 360px.
+    rationale: Warga dan wisatawan mengakses lewat ponsel.
+    severity: medium
+    class: waivable
+    gate: G6
+    verification: Catatan uji per perangkat/browser.
+    evidence: [document, screenshot]
+
+  - id: BASE-QA-009
+    domain: QA
+    title: Aksesibilitas dasar
+    statement: >-
+      Formulir SEBAIKNYA memiliki label yang terhubung ke input, kontras teks cukup, ukuran teks dasar minimal 16px
+      pada mobile, dan pesan error berbahasa awam.
+    rationale: Operator dan warga berlatar non-teknis.
+    severity: low
+    class: waivable
+    gate: G6
+    verification: Audit Lighthouse aksesibilitas atau checklist manual.
+    evidence: [report]
+
+  # ---------------- OBS ----------------
+  - id: BASE-OBS-001
+    domain: OBS
+    title: Log terstruktur dengan skema bersama
+    statement: >-
+      Log aplikasi WAJIB berformat JSON dengan field: timestamp (ISO 8601 dengan offset), level (DEBUG|INFO|WARN|ERROR),
+      event (snake_case), correlation_id, service (sid|sigap|cimart|vdash), env, actor (user ID/device ID/"system"), context (object).
+      DEBUG WAJIB nonaktif di production.
+    rationale: Dipertahankan dari OBS-001 v1 §3; ditambah field env.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Sampel log staging tervalidasi terhadap skema.
+    evidence: [code, screenshot]
+
+  - id: BASE-OBS-002
+    domain: OBS
+    title: Disiplin level log dan cakupan event
+    statement: >-
+      Level log WAJIB mengikuti konvensi OBS v1 §3.3. Setiap critical path WAJIB menghasilkan event INFO saat sukses dan
+      ERROR saat gagal.
+    rationale: Alerting berbasis level hanya berguna bila level dipakai benar.
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Pemetaan critical path -> nama event.
+    evidence: [code]
+
+  - id: BASE-OBS-003
+    domain: OBS
+    title: Correlation ID
+    statement: >-
+      Correlation ID (UUID v4) WAJIB dibangkitkan di titik masuk request (middleware) bila belum ada, dikembalikan di header
+      X-Correlation-ID, disertakan di setiap entri log alur tersebut, dan diteruskan pada panggilan antar sistem.
+    rationale: Penelusuran alur tanpa distributed tracing (keputusan v1 dipertahankan).
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Satu request staging dapat ditelusuri lewat correlation_id di log.
+    evidence: [code, screenshot]
+
+  - id: BASE-OBS-004
+    domain: OBS
+    title: Endpoint health dan readiness
+    statement: >-
+      Sistem WAJIB menyediakan /health (proses hidup) dan /ready (dependensi utama seperti DB dapat dijangkau),
+      tanpa autentikasi dan tanpa membocorkan versi, konfigurasi, atau data.
+    rationale: Dasar monitoring ketersediaan; v1 tidak punya sinyal "situs mati".
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Request ke kedua endpoint di production; respons minimal.
+    evidence: [code, screenshot]
+
+  - id: BASE-OBS-005
+    domain: OBS
+    title: Uptime monitoring eksternal
+    statement: >-
+      Layanan monitoring eksternal (di luar host production) WAJIB memeriksa /health maksimal setiap 5 menit dan memantau
+      masa berlaku sertifikat TLS, dengan alert push (OBS-007).
+    rationale: Alert error-rate tidak akan menyala bila server mati total.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Screenshot konfigurasi monitor + bukti uji alert.
+    evidence: [screenshot]
+
+  - id: BASE-OBS-006
+    domain: OBS
+    title: Alert error dan resource
+    statement: >-
+      WAJIB ada alert untuk: lonjakan event ERROR (ambang ditetapkan di profil), penggunaan disk >= 85%, dan kegagalan
+      backup (DATA-005).
+    rationale: Deteksi sebelum berdampak ke warga.
+    severity: medium
+    class: waivable
+    gate: G7
+    verification: Konfigurasi alert + bukti uji tiap jenis alert.
+    evidence: [config, screenshot]
+
+  - id: BASE-OBS-007
+    domain: OBS
+    title: Routing alert dua jalur
+    statement: >-
+      Alert WAJIB dirutekan dua jalur: (1) alert teknis ke kontak teknis (tim selama support window, lalu dev penerus atau
+      penyedia hosting); (2) hanya alert yang bisa ditindaklanjuti operator (mis. situs tidak bisa diakses) dikirim ke operator
+      mitra dalam bahasa awam tanpa istilah teknis. Daftar penerima WAJIB tercatat di runbook.
+    rationale: Mengirim alert teknis ke operator non-teknis menimbulkan alert fatigue (kritik v1 §6.2).
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Tabel routing di runbook + contoh pesan operator.
+    evidence: [document]
+
+  - id: BASE-OBS-008
+    domain: OBS
+    title: Rotasi dan retensi log otomatis
+    statement: >-
+      Log WAJIB dirotasi dan dihapus otomatis. Retensi default: log keamanan (SEC-020) 90 hari, log aplikasi 30 hari;
+      boleh diubah di profil sesuai kapasitas disk dan retensi PRIV-007.
+    rationale: Hosting desa terbatas dan tidak ada pemeliharaan manual setelah handoff.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Konfigurasi rotasi (logrotate/channel daily/transport) + bukti file lama terhapus.
+    evidence: [config]
+    supersedes: [LOG-003]
+
+  - id: BASE-OBS-009
+    domain: OBS
+    title: Runbook sistem
+    statement: >-
+      Setiap sistem WAJIB memiliki docs/awg/runbook.md (template) berisi: lokasi log, cara cek health, daftar event normal vs
+      perlu investigasi, tindakan per jenis error, routing alert, kontak eskalasi, serta prosedur backup/restore dan rollback.
+    rationale: Dipertahankan dari OBS-001 v1 §7, diperluas.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Dry-run - anggota tim lain menjalankan satu prosedur runbook tanpa bantuan penulis.
+    evidence: [document]
+
+  - id: BASE-OBS-010
+    domain: OBS
+    title: Metrik bisnis minimum
+    statement: >-
+      Sistem SEBAIKNYA menyajikan metrik bisnis minimum yang ditetapkan di profil (mis. surat diproses/hari, perangkat aktif,
+      transaksi/hari) untuk laporan ke mitra.
+    rationale: Bukti nilai sistem bagi stakeholder non-teknis.
+    severity: low
+    class: waivable
+    gate: G7
+    verification: Halaman admin/laporan menampilkan metrik.
+    evidence: [screenshot]
+
+  # ---------------- PERF ----------------
+  - id: BASE-PERF-001
+    domain: PERF
+    title: Target respons endpoint kritis
+    statement: >-
+      Endpoint critical path WAJIB memenuhi p95 waktu respons server <= 1000 ms untuk baca dan <= 2000 ms untuk tulis
+      pada konkurensi target (PERF-002) di environment setara production. Profil BOLEH memperketat; pelonggaran hanya via waiver.
+    rationale: Mengganti "ditetapkan Tech Lead" di v1 dengan angka yang bisa diverifikasi.
+    severity: high
+    class: waivable
+    gate: G6
+    verification: Hasil uji beban PERF-002 menunjukkan p95 per endpoint.
+    evidence: [report]
+
+  - id: BASE-PERF-002
+    domain: PERF
+    title: Uji beban berbasis estimasi beban riil
+    statement: >-
+      Profil WAJIB mencantumkan estimasi puncak pengguna konkuren beserta dasar estimasinya. Uji beban (mis. k6) WAJIB
+      dijalankan pada 2x estimasi puncak terhadap critical paths sebelum G7, dan hasilnya disimpan di docs/awg/reports/.
+    rationale: Kata "proporsional" di v1 tidak bisa diverifikasi tanpa angka.
+    severity: high
+    class: waivable
+    gate: G6
+    verification: Skrip uji beban di repo + laporan hasil.
+    evidence: [code, report]
+
+  - id: BASE-PERF-003
+    domain: PERF
+    title: Pencegahan N+1 query
+    statement: >-
+      Query daftar beserta relasi WAJIB memakai eager loading/join. Deteksi lazy loading SEBAIKNYA diaktifkan di non-production
+      (mis. Model::preventLazyLoading di Laravel). Pemeriksaan N+1 masuk checklist review.
+    rationale: Dipertahankan dari PERF v1 §3.1.
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Konfigurasi deteksi atau log query halaman daftar critical path.
+    evidence: [code, config]
+
+  - id: BASE-PERF-004
+    domain: PERF
+    title: Indeks untuk kolom filter dan foreign key
+    statement: >-
+      Kolom yang dipakai sebagai filter, urutan, atau join pada critical path WAJIB diindeks; query critical path WAJIB diperiksa
+      dengan EXPLAIN. (Catatan: PostgreSQL tidak otomatis mengindeks kolom foreign key.)
+    rationale: Dipertahankan dari PERF v1 §3.2, digeneralisasi.
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Daftar indeks di migration + output EXPLAIN query utama.
+    evidence: [code, report]
+
+  - id: BASE-PERF-005
+    domain: PERF
+    title: Pagination dengan batas
+    statement: >-
+      Semua endpoint daftar WAJIB memakai pagination dengan ukuran halaman maksimum di sisi server (default maks 100).
+    rationale: Volume data terus bertambah.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Request dengan per_page besar dibatasi server.
+    evidence: [code, test]
+
+  - id: BASE-PERF-006
+    domain: PERF
+    title: Anggaran performa frontend mobile
+    statement: >-
+      Halaman critical path WAJIB mencapai LCP <= 4.0 dtk pada Lighthouse mode mobile (target SEBAIKNYA <= 2.5 dtk);
+      gambar WAJIB terkompresi dan responsif, dan elemen di luar viewport awal SEBAIKNYA lazy-load.
+    rationale: Akses lewat data seluler di desa dan lokasi wisata (PERF v1 §4).
+    severity: medium
+    class: waivable
+    gate: G6
+    verification: Laporan Lighthouse per halaman critical path.
+    evidence: [report]
+
+  - id: BASE-PERF-007
+    domain: PERF
+    title: Connection pooling dan timeout
+    statement: >-
+      Koneksi database WAJIB memakai pool dengan batas maksimum terkonfigurasi. Panggilan keluar (DB, HTTP ke sistem lain,
+      gateway) WAJIB memiliki timeout eksplisit.
+    rationale: Mencegah habisnya koneksi dan request menggantung (generalisasi PERF v1 §5.1).
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Konfigurasi pool dan timeout.
+    evidence: [config, code]
+
+  - id: BASE-PERF-008
+    domain: PERF
+    title: Baseline performa production
+    statement: >-
+      Dalam 30 hari setelah deploy production pertama WAJIB dicatat baseline p50/p95/p99 critical path dan pemakaian
+      CPU/RAM/disk normal.
+    rationale: Dipertahankan dari PERF v1 §2.2.
+    severity: low
+    class: waivable
+    gate: G7
+    verification: Laporan baseline di docs/awg/reports/.
+    evidence: [report]
+
+  # ---------------- REL ----------------
+  - id: BASE-REL-001
+    domain: REL
+    title: Environment terpisah dan setara
+    statement: >-
+      Dev, staging, dan production WAJIB terpisah (kode, DB, secret). Staging WAJIB memakai versi mayor runtime dan DB yang
+      sama dengan production.
+    rationale: Bug yang hanya muncul di production sering berasal dari beda versi.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Tabel versi per environment di profil.
+    evidence: [document]
+
+  - id: BASE-REL-002
+    domain: REL
+    title: Konfigurasi lewat environment dan .env.example lengkap
+    statement: >-
+      Konfigurasi yang berbeda antar environment WAJIB lewat environment variable. .env.example WAJIB memuat semua variabel
+      dengan nilai contoh non-rahasia dan keterangan.
+    rationale: Dev penerus harus bisa menjalankan sistem.
+    severity: medium
+    class: non_waivable
+    gate: G5
+    verification: Bandingkan variabel yang dibaca kode dengan .env.example.
+    evidence: [code]
+
+  - id: BASE-REL-003
+    domain: REL
+    title: Versi rilis dan changelog
+    statement: >-
+      Setiap deploy production WAJIB berasal dari tag versi (SemVer) dengan entri CHANGELOG.
+    rationale: Rollback dan dukungan pasca-handoff butuh versi yang jelas.
+    severity: medium
+    class: waivable
+    gate: G7
+    verification: Tag dan CHANGELOG di repo.
+    evidence: [code]
+
+  - id: BASE-REL-004
+    domain: REL
+    title: Perubahan skema hanya lewat migration
+    statement: >-
+      Perubahan skema DB WAJIB lewat migration di repo yang direview. Migration destruktif (drop/rename/alter tipe) WAJIB
+      didahului backup sesaat sebelum dijalankan di production.
+    rationale: Skema yang dapat direproduksi dan perubahan yang aman.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Tidak ada perubahan skema manual; folder migration lengkap dari nol.
+    evidence: [code]
+
+  - id: BASE-REL-005
+    domain: REL
+    title: Deployment terdokumentasi dan dapat diulang
+    statement: >-
+      Deployment WAJIB dijalankan lewat skrip atau pipeline yang ada di repo, dengan Deployment Guide yang bisa dijalankan
+      orang di luar tim.
+    rationale: Selaras G7; deployment manual ad hoc tidak bisa diwariskan.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Anggota tim lain melakukan deploy ke staging hanya dari guide.
+    evidence: [code, document]
+
+  - id: BASE-REL-006
+    domain: REL
+    title: Prosedur rollback teruji
+    statement: >-
+      Prosedur rollback (versi aplikasi dan DB) WAJIB terdokumentasi dan dilatih minimal sekali di staging sebelum G7.
+    rationale: Deploy gagal tanpa rollback = downtime panjang.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Catatan latihan rollback (tanggal, durasi, hasil).
+    evidence: [document]
+
+  - id: BASE-REL-007
+    domain: REL
+    title: Go/no-go checklist
+    statement: >-
+      Setiap deploy production WAJIB didahului go/no-go checklist (template) yang ditandatangani Tech Lead dan diketahui
+      Program Coordinator, dan diakhiri verifikasi pasca-deploy (QA-007).
+    rationale: Selaras G7 "verifikasi pasca deployment".
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Checklist terisi per deploy di docs/awg/reports/.
+    evidence: [document]
+
+  - id: BASE-REL-008
+    domain: REL
+    title: Penilaian kapasitas hosting
+    statement: >-
+      Kondisi hosting production dan staging WAJIB didokumentasikan: spesifikasi (CPU/RAM/disk), pengelola, akses yang tersedia
+      (SSH/panel), dukungan backup, auto-renew TLS, serta keterbatasan yang diketahui.
+    rationale: Mengisi kontrol hosting yang hilang di v1 (TPR-001 tidak pernah ada).
+    severity: high
+    class: non_waivable
+    gate: G6
+    verification: Bagian hosting di profil/Architecture Document.
+    evidence: [document]
+
+  # ---------------- DATA ----------------
+  - id: BASE-DATA-001
+    domain: DATA
+    title: Backup otomatis harian
+    statement: >-
+      Database dan file unggahan WAJIB di-backup otomatis minimal harian (RPO <= 24 jam).
+    rationale: Di v1 hanya SID; transaksi CibendaMart dan data SIGAP juga bernilai.
+    severity: critical
+    class: non_waivable
+    gate: G6
+    verification: Jadwal backup + daftar file backup 7 hari terakhir.
+    evidence: [config, screenshot]
+    supersedes: [BAK-001]
+
+  - id: BASE-DATA-002
+    domain: DATA
+    title: Backup offsite dan terenkripsi
+    statement: >-
+      Minimal satu salinan backup WAJIB disimpan di luar host production (lokasi atau penyedia berbeda). Backup yang memuat
+      Tier 1/3 WAJIB terenkripsi, dan kuncinya disimpan terpisah dari backup.
+    rationale: Backup di server yang sama ikut hilang bila server rusak.
+    severity: critical
+    class: non_waivable
+    gate: G7
+    verification: Konfigurasi tujuan backup + bukti enkripsi.
+    evidence: [config]
+    supersedes: [BAK-003]
+
+  - id: BASE-DATA-003
+    domain: DATA
+    title: Retensi backup
+    statement: >-
+      Retensi backup WAJIB minimal 7 harian, 4 mingguan, 3 bulanan. Profil BOLEH memperpanjang selama konsisten dengan
+      PRIV-007; pengurangan karena kapasitas hanya lewat waiver.
+    rationale: Memulihkan dari korupsi data yang baru disadari beberapa hari kemudian.
+    severity: medium
+    class: waivable
+    gate: G7
+    verification: Konfigurasi retensi.
+    evidence: [config]
+
+  - id: BASE-DATA-004
+    domain: DATA
+    title: Uji restore dan target RTO
+    statement: >-
+      Restore penuh dari backup offsite WAJIB diuji minimal sekali sebelum G7 ke environment terpisah, dengan RTO target
+      <= 8 jam tercatat. Prosedur restore WAJIB ada di runbook, dan uji ulang SEBAIKNYA tiap 3 bulan.
+    rationale: Backup yang tidak pernah di-restore belum terbukti.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Catatan uji restore (tanggal, durasi, verifikasi data).
+    evidence: [document]
+    supersedes: [BAK-004]
+
+  - id: BASE-DATA-005
+    domain: DATA
+    title: Alert kegagalan backup
+    statement: >-
+      Kegagalan atau ketiadaan backup terjadwal WAJIB memicu alert ke jalur teknis (OBS-007).
+    rationale: Backup yang diam-diam gagal baru diketahui saat dibutuhkan.
+    severity: high
+    class: waivable
+    gate: G7
+    verification: Bukti uji alert (simulasi backup gagal).
+    evidence: [screenshot]
+
+  # ---------------- MAINT ----------------
+  - id: BASE-MAINT-001
+    domain: MAINT
+    title: Versi runtime dan framework masih didukung
+    statement: >-
+      Saat G7, versi runtime (PHP/Node), framework (Laravel/Express/React), dan DB WAJIB masih dalam masa dukungan keamanan.
+      Tanggal EOL masing-masing WAJIB tercatat di handover (rujukan: endoflife.date).
+    rationale: Sistem tanpa patch keamanan akan membusuk setelah handoff.
+    severity: high
+    class: waivable
+    gate: G7
+    verification: Tabel versi + tanggal EOL di handover.
+    evidence: [document]
+
+  - id: BASE-MAINT-002
+    domain: MAINT
+    title: Aset dan akun milik mitra
+    statement: >-
+      Domain, DNS, hosting, email layanan, repository, dan akun pihak ketiga (gateway, monitoring, notifikasi) WAJIB terdaftar
+      atas nama atau akun organisasi mitra, bukan akun pribadi anggota tim, dan WAJIB tercantum di inventaris aset handover.
+    rationale: Akun pribadi mahasiswa = sistem tersandera setelah lulus.
+    severity: critical
+    class: non_waivable
+    gate: G7
+    verification: Inventaris aset (nama layanan, pemilik akun, tanpa password) dikonfirmasi mitra.
+    evidence: [document]
+
+  - id: BASE-MAINT-003
+    domain: MAINT
+    title: Kalender perpanjangan
+    statement: >-
+      Tanggal kedaluwarsa domain, hosting, sertifikat (bila manual), dan langganan berbayar WAJIB tercatat di handover beserta
+      pengingat ke operator mitra.
+    rationale: Kedaluwarsa domain/hosting = downtime total yang bisa dicegah.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Tabel kalender di handover + mekanisme pengingat.
+    evidence: [document]
+
+  - id: BASE-MAINT-004
+    domain: MAINT
+    title: Fitur containment untuk operator awam
+    statement: >-
+      Sistem SEBAIKNYA menyediakan: (1) mode maintenance yang dapat diaktifkan admin lewat UI, terlindungi autentikasi + log audit;
+      (2) pemulihan akses admin yang aman tanpa akses DB langsung (mis. admin kedua atau recovery code, tercatat di log audit,
+      tanpa reset via pertanyaan rahasia/email yang tidak terverifikasi); (3) kontak dukungan dan tanggal akhir support window
+      di halaman admin.
+    rationale: Dari AWG-SEC-006 §5; ditambah syarat keamanan karena fitur ini sendiri adalah permukaan serangan.
+    severity: medium
+    class: waivable
+    gate: G7
+    verification: Demo fitur + review keamanan alur pemulihan.
+    evidence: [screenshot, code]
+
+  - id: BASE-MAINT-005
+    domain: MAINT
+    title: Paket handover lengkap
+    statement: >-
+      Paket handover WAJIB memenuhi artefak G7 Program Gates dan template handover-checklist, termasuk: runbook, Deployment Guide,
+      prosedur backup/restore, Known Issues, snapshot status.yaml, daftar waiver aktif sebagai keterbatasan, dan operator playbook.
+    rationale: Menyatukan kebutuhan G7 dan AWG-SEC-006.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Checklist handover terisi dan diterima mitra.
+    evidence: [document]
+
+  - id: BASE-MAINT-006
+    domain: MAINT
+    title: Serah terima kredensial
+    statement: >-
+      Saat handoff semua kredensial production WAJIB dirotasi, diserahkan ke mitra lewat kanal aman (bukan chat biasa), dan
+      akses anggota tim WAJIB dicabut paling lambat di akhir support window.
+    rationale: Mencegah akses tersisa yang tidak terkendali.
+    severity: critical
+    class: non_waivable
+    gate: G7
+    verification: Berita acara serah terima (daftar kredensial, tanpa nilai) + bukti pencabutan akses.
+    evidence: [document]
+
+  - id: BASE-MAINT-007
+    domain: MAINT
+    title: Support window dideklarasikan
+    statement: >-
+      Jenis support window (3 bulan tanpa dev penerus / 1 bulan knowledge transfer), PIC tim, dan tanggal berakhirnya WAJIB
+      tertulis di handover dan halaman admin aplikasi.
+    rationale: Mencegah ekspektasi tidak realistis (AWG-SEC-006 §3).
+    severity: medium
+    class: non_waivable
+    gate: G7
+    verification: Dokumen handover + screenshot halaman admin.
+    evidence: [document, screenshot]
+
+  - id: BASE-MAINT-008
+    domain: MAINT
+    title: Panduan patching untuk penerus
+    statement: >-
+      Book guide Development Selanjutnya WAJIB memuat langkah memperbarui dependency dengan aman (cek audit, update, jalankan test,
+      deploy staging, deploy production) dan rekomendasi frekuensi pemeriksaan keamanan bulanan.
+    rationale: Pemeliharaan keamanan jangka panjang.
+    severity: medium
+    class: waivable
+    gate: G7
+    verification: Bagian panduan di book guide.
+    evidence: [document]

@@ -1,0 +1,18 @@
+# Kontrol khusus sistem (format: RFC-0001 M.4, schema: catalog/schema/controls-local.schema.json)
+# Format sama dengan katalog (framework 01 §2) dengan prefix SYS-<SYSTEM>-NNN.
+# Field tambahan opsional: conditional: true, source: seed|team.
+# Hanya tulis kontrol yang dirumuskan atau disetujui Tech Lead. Usulan di seeds/<system>.yaml belum terverifikasi.
+system: ""
+controls: []
+# Contoh format (hapus tanda komentar dan sesuaikan):
+#  - id: SYS-SID-001
+#    title: ""
+#    statement: >-
+#      ... WAJIB ...
+#    rationale: ""
+#    severity: high            # critical | high | medium | low
+#    class: non_waivable       # non_waivable | waivable (critical selalu non_waivable)
+#    gate: G5                  # G3-G7
+#    verification: ""
+#    evidence: [code, test]    # code | config | test | ci_run | document | screenshot | report
+#    source: seed              # seed | team

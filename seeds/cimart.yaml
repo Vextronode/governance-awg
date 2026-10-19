@@ -1,0 +1,41 @@
+# USULAN BELUM TERVERIFIKASI — dikonfirmasi saat adopsi (templates/claude/awg-adopt.md)
+# seeds/cimart.yaml
+system: CIMART
+name: CibendaMart
+stack_confirmed: {backend: Laravel, frontend: React, database: MySQL}
+open_facts: [payment gateway belum diputuskan mitra]
+candidate_modules: [PII, PAYMENT, FILE-UPLOAD, CMS, PUBLIC-API, NOTIFY, PWA]
+candidate_critical_paths:
+  - Pembeli checkout hingga order tercatat dan stok berkurang
+  - Konfirmasi pembayaran (gateway atau manual)
+  - Penjual mengelola produk dan stok
+  - Login pembeli/penjual/admin
+proposed_sys_controls:
+  - id: SYS-CIMART-001
+    title: Pengurangan stok atomik
+    statement: >-
+      Pengurangan stok saat checkout WAJIB atomik di dalam transaksi DB (SELECT ... FOR UPDATE, atau UPDATE ... SET stock = stock - ? WHERE id = ? AND stock >= ?) dan WAJIB diuji dengan checkout bersamaan pada stok terbatas.
+    severity: critical
+    class: non_waivable
+    gate: G5
+  - id: SYS-CIMART-002
+    title: Isolasi data antar penjual
+    statement: >-
+      Penjual WAJIB hanya dapat melihat dan mengubah produk, stok, dan order miliknya (cek kepemilikan di server + test negatif lintas penjual).
+    severity: critical
+    class: non_waivable
+    gate: G5
+  - id: SYS-CIMART-003
+    title: Konfigurasi MySQL aman untuk transaksi
+    statement: >-
+      Semua tabel WAJIB memakai engine InnoDB, sql_mode strict (STRICT_TRANS_TABLES), dan charset utf8mb4.
+    severity: medium
+    class: non_waivable
+    gate: G5
+  - id: SYS-CIMART-004
+    title: Keputusan payment gateway tercatat
+    statement: >-
+      Pemilihan payment gateway WAJIB dicatat sebagai ADR sebelum integrasi; sampai diputuskan, checkout WAJIB memakai jalur MOD-PAYMENT-007 (manual) atau berada di balik feature flag yang mati di production.
+    severity: high
+    class: waivable
+    gate: G5

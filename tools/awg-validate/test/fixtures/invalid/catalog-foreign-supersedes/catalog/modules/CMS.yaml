@@ -1,0 +1,34 @@
+# Fixture invalid (catalog-foreign-supersedes).
+catalog: module
+module: CMS
+version: 2.0.0
+title: Konten publik yang dikelola admin
+applies_when: Admin/operator menerbitkan konten publik (berita, pengumuman, profil, produk) dengan editor teks/rich text.
+detection_hints:
+  - tabel posts/news/announcements/pages
+  - editor rich text (TipTap/Quill/CKEditor/TinyMCE)
+controls:
+  - id: MOD-CMS-001
+    module: CMS
+    title: Sanitasi rich text di server
+    statement: Konten rich text WAJIB disanitasi di server dengan allowlist tag/atribut sebelum disimpan atau dirender.
+    rationale: Stored XSS ke pengunjung publik dan petugas.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Test menyimpan <script>/onerror tidak tereksekusi.
+    evidence:
+      - test
+    supersedes:
+      - TPR-001
+  - id: MOD-CMS-002
+    module: CMS
+    title: Hak terbit dan jejak perubahan
+    statement: Hanya peran berwenang yang dapat menerbitkan/mengubah konten publik, dan setiap perubahan WAJIB tercatat (siapa, kapan).
+    rationale: Integritas konten Tier 4 (pencegahan defacement/hoaks atas nama desa).
+    severity: medium
+    class: non_waivable
+    gate: G5
+    verification: Test peran tanpa hak ditolak + sampel log.
+    evidence:
+      - test

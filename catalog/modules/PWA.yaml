@@ -1,0 +1,41 @@
+catalog: module
+module: PWA
+version: 2.0.0
+title: Progressive Web App / service worker
+applies_when: Aplikasi mendaftarkan service worker (PWA).
+detection_hints: [navigator.serviceWorker.register, vite-plugin-pwa, workbox, manifest.webmanifest]
+controls:
+  - id: MOD-PWA-001
+    module: PWA
+    title: Respons berisi data sensitif tidak di-cache
+    statement: >-
+      Service worker WAJIB tidak menyimpan respons API terautentikasi yang memuat data Tier 1/3 di Cache Storage; strategi
+      cache hanya untuk aset statis dan konten publik.
+    rationale: Data pribadi tertinggal di perangkat bersama.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Inspeksi Cache Storage setelah login di DevTools.
+    evidence: [screenshot, code]
+  - id: MOD-PWA-002
+    module: PWA
+    title: Strategi pembaruan versi
+    statement: >-
+      Cache WAJIB berversi, dan pengguna WAJIB menerima versi baru setelah deploy (tidak terjebak di versi lama yang rusak).
+    rationale: Masalah PWA paling umum setelah rilis.
+    severity: medium
+    class: non_waivable
+    gate: G6
+    verification: Uji deploy versi baru di staging.
+    evidence: [test, document]
+  - id: MOD-PWA-003
+    module: PWA
+    title: Logout membersihkan cache pengguna
+    statement: >-
+      Logout WAJIB menghapus cache dan storage lokal yang terkait pengguna.
+    rationale: Perangkat bersama di kantor desa.
+    severity: medium
+    class: non_waivable
+    gate: G5
+    verification: Inspeksi storage setelah logout.
+    evidence: [screenshot]

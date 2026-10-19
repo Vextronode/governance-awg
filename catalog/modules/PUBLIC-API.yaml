@@ -1,0 +1,53 @@
+catalog: module
+module: PUBLIC-API
+version: 2.0.0
+title: API yang dikonsumsi sistem lain
+applies_when: Sistem menyediakan API untuk dikonsumsi sistem lain (mis. data agregat untuk Village Dashboard).
+detection_hints: [route /api/v*/ untuk konsumen eksternal, API key konsumen, dokumen OpenAPI]
+controls:
+  - id: MOD-PUBLIC-API-001
+    module: PUBLIC-API
+    title: Kontrak API terdokumentasi dan berversi
+    statement: >-
+      API untuk sistem lain WAJIB didokumentasikan (OpenAPI atau setara) dan berversi di path (mis. /api/v1); perubahan
+      yang merusak kompatibilitas WAJIB memakai versi baru.
+    rationale: Selaras G3 API Specification.
+    severity: high
+    class: non_waivable
+    gate: G3
+    verification: File spesifikasi di repo.
+    evidence: [document]
+  - id: MOD-PUBLIC-API-002
+    module: PUBLIC-API
+    title: Autentikasi per konsumen, hanya-baca
+    statement: >-
+      Setiap konsumen WAJIB memakai kredensial sendiri ber-scope hanya-baca yang dapat dicabut.
+    rationale: NET-004 v1.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Test tanpa/dengan kredensial salah ditolak; test operasi tulis ditolak.
+    evidence: [test]
+  - id: MOD-PUBLIC-API-003
+    module: PUBLIC-API
+    title: Hanya data yang disepakati
+    statement: >-
+      Respons WAJIB hanya memuat field yang tercantum di kontrak; data Tier 1 WAJIB tidak dikirim kecuali kontrak secara eksplisit
+      menyetujuinya dengan dasar PRIV-001, dan data agregat WAJIB diutamakan.
+    rationale: Dashboard tidak butuh data individu.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Bandingkan respons aktual dengan kontrak.
+    evidence: [test]
+  - id: MOD-PUBLIC-API-004
+    module: PUBLIC-API
+    title: Rate limit API
+    statement: >-
+      API WAJIB diberi rate limit per konsumen.
+    rationale: Melindungi sistem sumber dari konsumen yang salah konfigurasi.
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Konfigurasi rate limit.
+    evidence: [config]

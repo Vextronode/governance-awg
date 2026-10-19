@@ -1,0 +1,115 @@
+# =============================================================================
+# Threat model sistem (AWG v2)
+# Schema: catalog/schema/threat-model.schema.json — metodologi: 00-framework/04-threat-modeling.md
+#
+# Cara pakai:
+#   1. Isi system_info, lalu dfd_elements, trust_boundaries, dan stride_findings.
+#   2. Trust boundary minimum per sistem: framework 04 §2.2. Setiap boundary wajib punya >= 1 finding.
+#   3. likelihood/impact 1-3; score = likelihood x impact; risk_rating: 1-2 low, 3-4 medium, 6 high, 9 critical.
+#   4. Setiap finding wajib punya related_controls atau mitigation khusus.
+#   5. mitigation_status done hanya dengan verification_evidence.
+#   6. Finding source: claude-draft wajib direview Tech Lead dan DevOps Coordinator.
+#   7. Blok review diisi DevOps Coordinator (BASE-GOV-001).
+#
+# CONTOH: seluruh isi di bawah adalah sistem FIKTIF "Attendance Kiosk" (CONTOH SAJA),
+# hanya ilustrasi format. Ganti seluruhnya dengan sistem nyata sebelum diajukan.
+# =============================================================================
+awg_version: v2.0.0
+
+system_info:
+  system_name: "Attendance Kiosk (CONTOH SAJA)"
+  tech_lead: "Tech Lead - Attendance Kiosk (CONTOH)"
+  last_updated: "YYYY-MM-DD"
+  program_gate_at_submission: "G3"
+
+review:
+  reviewer: ""          # DevOps Coordinator
+  date: ""              # YYYY-MM-DD
+  note: ""
+
+dfd_elements:
+  external_entities:
+    - name: "Kiosk Device"
+      description: "Perangkat kiosk yang mengirim data absensi (CONTOH)"
+      trust_level: "untrusted"
+    - name: "Admin"
+      description: "Petugas yang mereview absensi (CONTOH)"
+      trust_level: "authenticated-high-privilege"
+  processes:
+    - name: "submit_attendance"
+      description: "Menerima data absensi dari kiosk"
+      data_classification_touched: ["Operational - Internal"]
+    - name: "Admin Review UI"
+      description: "Halaman review absensi khusus admin"
+      data_classification_touched: ["PII - Restricted"]
+  data_stores:
+    - name: "Attendance DB"
+      description: "Tabel absensi"
+      data_classification: "PII - Restricted"
+  data_flows:
+    - name: "Kiosk mengirim data absensi"
+      source: "Kiosk Device"
+      destination: "submit_attendance"
+      data_classification: "Operational - Internal"
+      crosses_trust_boundary: true
+    - name: "Admin membuka daftar absensi"
+      source: "Admin"
+      destination: "Admin Review UI"
+      data_classification: "PII - Restricted"
+      crosses_trust_boundary: true
+
+trust_boundaries:
+  - boundary_id: "TB-01"
+    description: "Kiosk device (untrusted) -> Backend"
+    elements_involved: ["Kiosk Device", "submit_attendance"]
+  - boundary_id: "TB-02"
+    description: "Sesi pengguna biasa -> Admin Review UI (privilege boundary)"
+    elements_involved: ["Admin", "Admin Review UI"]
+
+stride_findings:
+  - finding_id: "KIOSK-001"
+    element: "submit_attendance (process)"
+    trust_boundary_ref: "TB-01"
+    stride_category: "Spoofing"
+    threat_description: >-
+      Perangkat selain kiosk resmi bisa mengirim data absensi palsu bila
+      endpoint menerima request tanpa verifikasi identitas perangkat.
+    likelihood: 2
+    impact: 2
+    score: 4
+    risk_rating: medium
+    related_controls: [MOD-IOT-INGEST-001]
+    mitigation: >-
+      Wajibkan API key atau sertifikat khusus per kiosk; tolak submission
+      tanpa kredensial perangkat yang valid.
+    mitigation_status: not_started
+    owner: "Tech Lead - Attendance Kiosk (CONTOH)"
+    verification_evidence: ""
+    source: team
+  - finding_id: "KIOSK-002"
+    element: "Admin Review UI (process)"
+    trust_boundary_ref: "TB-02"
+    stride_category: "Elevation of Privilege"
+    threat_description: >-
+      Pengguna non-admin bisa membuka endpoint daftar absensi bila otorisasi
+      hanya dilakukan dengan menyembunyikan menu di UI.
+    likelihood: 3
+    impact: 2
+    score: 6
+    risk_rating: high
+    related_controls: [BASE-SEC-005]
+    mitigation: >-
+      Otorisasi server-side berbasis peran pada setiap endpoint admin,
+      dengan test negatif untuk peran non-admin.
+    mitigation_status: done
+    owner: "Tech Lead - Attendance Kiosk (CONTOH)"
+    verification_evidence: "tests/Feature/AdminReviewAuthorizationTest.php (CONTOH)"
+    source: team
+
+submission_checklist:
+  all_dfd_elements_inventoried: false
+  minimum_trust_boundaries_covered: false
+  every_trust_boundary_crossing_has_at_least_one_finding: false
+  every_finding_has_related_controls_or_mitigation: false
+  likelihood_impact_score_rating_filled_using_shared_scale: false
+  ready_for_devops_coordinator_review: false

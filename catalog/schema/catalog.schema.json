@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Vextronode/governance-awg/catalog/schema/catalog.schema.json",
+  "title": "AWG v2 catalog (baseline atau modul)",
+  "description": "Field kontrol sesuai RFC-0001 C.2. Aturan lintas field (ID unik global, critical => non_waivable, supersedes hanya 30 ID v1, prefix MOD sesuai modul file) ditegakkan di tools/awg-validate.",
+  "oneOf": [
+    { "$ref": "#/$defs/baselineFile" },
+    { "$ref": "#/$defs/moduleFile" }
+  ],
+  "$defs": {
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "domain": { "enum": ["GOV", "SEC", "PRIV", "QA", "OBS", "PERF", "REL", "DATA", "MAINT"] },
+    "module": {
+      "enum": ["PII", "APPROVAL-WORKFLOW", "PAYMENT", "FILE-UPLOAD", "BULK-IMPORT", "IOT-INGEST", "PUBLIC-API", "API-CONSUMER", "CMS", "NOTIFY", "PWA"]
+    },
+    "severity": { "enum": ["critical", "high", "medium", "low"] },
+    "class": { "enum": ["non_waivable", "waivable"] },
+    "gate": { "enum": ["G3", "G4", "G5", "G6", "G7"] },
+    "evidenceType": { "enum": ["code", "config", "test", "ci_run", "document", "screenshot", "report"] },
+    "v1Id": { "type": "string", "pattern": "^(AUTH|AUTHZ|NET|SEC|TLS|LOG|BAK|TPR|IR)-\\d{3}$" },
+    "baseId": { "type": "string", "pattern": "^BASE-(GOV|SEC|PRIV|QA|OBS|PERF|REL|DATA|MAINT)-\\d{3}$" },
+    "modId": {
+      "type": "string",
+      "pattern": "^MOD-(PII|APPROVAL-WORKFLOW|PAYMENT|FILE-UPLOAD|BULK-IMPORT|IOT-INGEST|PUBLIC-API|API-CONSUMER|CMS|NOTIFY|PWA)-\\d{3}$"
+    },
+    "sysId": { "type": "string", "pattern": "^SYS-[A-Z][A-Z0-9]*-\\d{3}$" },
+    "commonControlProps": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "statement": { "type": "string", "pattern": "(WAJIB|SEBAIKNYA|BOLEH)" },
+        "rationale": { "type": "string", "minLength": 1 },
+        "severity": { "$ref": "#/$defs/severity" },
+        "class": { "$ref": "#/$defs/class" },
+        "gate": { "$ref": "#/$defs/gate" },
+        "verification": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidenceType" } },
+        "refs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "supersedes": { "type": "array", "items": { "$ref": "#/$defs/v1Id" } },
+        "deprecated": { "type": "boolean" }
+      },
+      "required": ["title", "statement", "rationale", "severity", "class", "gate", "verification", "evidence"]
+    },
+    "baseControl": {
+      "allOf": [{ "$ref": "#/$defs/commonControlProps" }],
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/baseId" },
+        "domain": { "$ref": "#/$defs/domain" },
+        "title": true, "statement": true, "rationale": true, "severity": true, "class": true,
+        "gate": true, "verification": true, "evidence": true, "refs": true, "supersedes": true, "deprecated": true
+      },
+      "required": ["id", "domain"],
+      "additionalProperties": false
+    },
+    "moduleControl": {
+      "allOf": [{ "$ref": "#/$defs/commonControlProps" }],
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/modId" },
+        "module": { "$ref": "#/$defs/module" },
+        "title": true, "statement": true, "rationale": true, "severity": true, "class": true,
+        "gate": true, "verification": true, "evidence": true, "refs": true, "supersedes": true, "deprecated": true
+      },
+      "required": ["id", "module"],
+      "additionalProperties": false
+    },
+    "baselineFile": {
+      "type": "object",
+      "properties": {
+        "catalog": { "const": "baseline" },
+        "version": { "$ref": "#/$defs/version" },
+        "controls": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/baseControl" } }
+      },
+      "required": ["catalog", "version", "controls"],
+      "additionalProperties": false
+    },
+    "moduleFile": {
+      "type": "object",
+      "properties": {
+        "catalog": { "const": "module" },
+        "module": { "$ref": "#/$defs/module" },
+        "version": { "$ref": "#/$defs/version" },
+        "title": { "type": "string", "minLength": 1 },
+        "applies_when": { "type": "string", "minLength": 1 },
+        "detection_hints": { "type": "array", "items": { "type": "string" } },
+        "controls": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/moduleControl" } }
+      },
+      "required": ["catalog", "module", "version", "title", "applies_when", "detection_hints", "controls"],
+      "additionalProperties": false
+    }
+  }
+}
