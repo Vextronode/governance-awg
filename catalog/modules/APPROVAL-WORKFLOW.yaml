@@ -1,0 +1,81 @@
+catalog: module
+module: APPROVAL-WORKFLOW
+version: 2.0.0
+title: Alur persetujuan multi-tahap berbasis peran/yurisdiksi
+applies_when: Sistem memiliki entitas yang berpindah status melalui persetujuan beberapa peran (mis. surat RT -> RW -> Kadus -> Kasi/Kaur).
+detection_hints: [kolom status dengan nilai *_approved/*_rejected, tabel approval/riwayat, middleware peran per tahap]
+controls:
+  - id: MOD-APPROVAL-WORKFLOW-001
+    module: APPROVAL-WORKFLOW
+    title: State machine eksplisit
+    statement: >-
+      Transisi status yang diizinkan WAJIB didefinisikan di satu tempat (state machine/enum + peta transisi). Server WAJIB
+      menolak transisi yang tidak terdaftar, dan setiap transisi valid maupun minimal satu transisi tidak valid per status
+      WAJIB memiliki test.
+    rationale: Mencegah lompat tahap.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Lokasi definisi transisi + daftar test transisi.
+    evidence: [code, test]
+  - id: MOD-APPROVAL-WORKFLOW-002
+    module: APPROVAL-WORKFLOW
+    title: Re-validasi peran dan yurisdiksi pada setiap aksi
+    statement: >-
+      Setiap aksi approve/reject WAJIB memvalidasi ulang di server bahwa peran DAN yurisdiksi aktor (mis. rt_id/rw_id/hamlet_id)
+      cocok dengan objek, terlepas dari gating UI. Query daftar antrean per tahap WAJIB di-scope ke yurisdiksi aktor di level query.
+    rationale: Risiko utama SID di v1 (AUTHZ-002).
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Test negatif - aktor yurisdiksi lain ditolak (403) dan tidak melihat objek di daftar.
+    evidence: [test]
+    supersedes: [AUTHZ-002]
+  - id: MOD-APPROVAL-WORKFLOW-003
+    module: APPROVAL-WORKFLOW
+    title: Pemisahan tugas
+    statement: >-
+      Aktor WAJIB tidak dapat menyetujui pengajuannya sendiri. Satu akun yang memegang lebih dari satu peran tahap SEBAIKNYA
+      tidak dapat menyetujui dua tahap berurutan pada objek yang sama, kecuali kebijakan mitra mengizinkan dan dicatat di profil.
+    rationale: Mencegah satu orang meloloskan seluruh rantai.
+    severity: high
+    class: waivable
+    gate: G5
+    verification: Test atau uji manual.
+    evidence: [test]
+  - id: MOD-APPROVAL-WORKFLOW-004
+    module: APPROVAL-WORKFLOW
+    title: Jejak audit transisi tidak dapat diubah
+    statement: >-
+      Setiap transisi WAJIB tercatat (aktor, waktu, status asal -> tujuan, catatan) di tabel riwayat append-only yang tidak
+      dapat diubah atau dihapus lewat aplikasi.
+    rationale: Riwayat approval adalah catatan resmi tindakan administratif.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Tidak ada endpoint update/delete untuk riwayat; review model.
+    evidence: [code]
+  - id: MOD-APPROVAL-WORKFLOW-005
+    module: APPROVAL-WORKFLOW
+    title: Aman terhadap aksi bersamaan
+    statement: >-
+      Transisi WAJIB atomik dengan pemeriksaan status saat ini di dalam transaksi (mis. UPDATE ... WHERE status = <status_diharapkan>
+      atau row lock), sehingga dua aksi bersamaan tidak menghasilkan dua transisi.
+    rationale: Dua petugas menekan approve hampir bersamaan.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Test konkurensi atau review kode transaksi.
+    evidence: [code, test]
+  - id: MOD-APPROVAL-WORKFLOW-006
+    module: APPROVAL-WORKFLOW
+    title: Nomor resmi dibangkitkan atomik
+    statement: >-
+      Nomor/identifier resmi yang diterbitkan di akhir alur WAJIB dibangkitkan atomik di dalam transaksi dan dijamin unik oleh
+      constraint unik di database; kebijakan celah nomor (boleh/tidak) WAJIB didokumentasikan.
+    rationale: Nomor ganda pada dokumen resmi merusak keabsahan.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Constraint unik di migration + test pembangkitan bersamaan.
+    evidence: [code, test]

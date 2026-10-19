@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Vextronode/governance-awg/catalog/schema/profile.schema.json",
+  "title": "AWG v2 docs/awg/profile.yaml",
+  "description": "Profil sistem sesuai RFC-0001 M.2. Kesamaan awg_version dengan awg.lock.yaml dan keberadaan modul di katalog ditegakkan di tools/awg-validate.",
+  "type": "object",
+  "properties": {
+    "awg_version": { "type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+$" },
+    "system": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9]*$" },
+        "name": { "type": "string" },
+        "repo": { "type": "string" },
+        "tech_lead": { "type": "string" },
+        "team": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "name", "repo", "tech_lead", "team"],
+      "additionalProperties": false
+    },
+    "stack": {
+      "type": "object",
+      "properties": {
+        "backend": { "type": "string" },
+        "frontend": { "type": "string" },
+        "database": { "type": "string" },
+        "runtime_versions": { "type": "object", "additionalProperties": { "type": ["string", "number"] } },
+        "other": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["backend", "frontend", "database", "runtime_versions", "other"],
+      "additionalProperties": false
+    },
+    "adoption": {
+      "type": "object",
+      "properties": {
+        "date": { "$ref": "#/$defs/dateOrEmpty" },
+        "gate_at_adoption": { "$ref": "#/$defs/gateOrEmpty" }
+      },
+      "required": ["date", "gate_at_adoption"],
+      "additionalProperties": false
+    },
+    "current_gate": { "$ref": "#/$defs/gateOrEmpty" },
+    "environments": {
+      "type": "object",
+      "properties": {
+        "production": { "$ref": "#/$defs/environment" },
+        "staging": { "$ref": "#/$defs/environment" }
+      },
+      "required": ["production", "staging"],
+      "additionalProperties": { "$ref": "#/$defs/environment" }
+    },
+    "hosting_assessment": { "type": "object" },
+    "modules": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "$ref": "#/$defs/moduleId" },
+              "reason": { "type": "string" },
+              "evidence": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["id", "reason", "evidence"],
+            "additionalProperties": false
+          }
+        },
+        "inactive": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "$ref": "#/$defs/moduleId" },
+              "reason": { "type": "string" }
+            },
+            "required": ["id", "reason"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["active", "inactive"],
+      "additionalProperties": false
+    },
+    "critical_paths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "pattern": "^CP-\\d{2,}$" },
+          "name": { "type": "string" },
+          "tests": { "type": "array", "items": { "type": "string" } },
+          "log_events": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["id", "name", "tests", "log_events"],
+        "additionalProperties": false
+      }
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "expected_peak_concurrent_users": { "type": ["integer", "null"], "minimum": 1 },
+        "basis": { "type": "string" },
+        "overrides": { "type": "array" }
+      },
+      "required": ["expected_peak_concurrent_users", "basis", "overrides"],
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "idle_timeout_minutes": { "type": ["integer", "null"], "minimum": 1, "maximum": 60 }
+      },
+      "required": ["idle_timeout_minutes"],
+      "additionalProperties": false
+    },
+    "observability": {
+      "type": "object",
+      "properties": {
+        "error_alert_threshold": { "type": "string" },
+        "business_metrics": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["error_alert_threshold", "business_metrics"],
+      "additionalProperties": false
+    },
+    "contacts": {
+      "type": "object",
+      "properties": {
+        "incident_tech": { "type": "string" },
+        "data_controller_contact": { "type": "string" }
+      },
+      "required": ["incident_tech", "data_controller_contact"],
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "required": [
+    "awg_version", "system", "stack", "adoption", "current_gate", "environments", "hosting_assessment",
+    "modules", "critical_paths", "performance", "security", "observability", "contacts"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "gateOrEmpty": { "type": "string", "pattern": "^(G[1-7])?$" },
+    "dateOrEmpty": { "type": "string", "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$" },
+    "moduleId": {
+      "description": "Keberadaan modul di catalog/modules/ diperiksa tools/awg-validate.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9-]*$"
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "hosting": { "type": "string" },
+        "url": { "type": "string" },
+        "managed_by": { "type": "string" }
+      },
+      "required": ["hosting", "url", "managed_by"],
+      "additionalProperties": true
+    }
+  }
+}

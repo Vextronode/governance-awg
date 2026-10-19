@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Vextronode/governance-awg/catalog/schema/waivers.schema.json",
+  "title": "AWG v2 docs/awg/waivers.yaml",
+  "description": "Waiver sesuai RFC-0001 D.2 (M.5). Aturan lintas field (kontrol harus waivable, score = likelihood x impact, belum kedaluwarsa, maksimal 90 hari, Program Coordinator + Coordinator domain, penyetuju bukan anggota tim) ditegakkan di tools/awg-validate.",
+  "type": "object",
+  "properties": {
+    "waivers": { "type": "array", "items": { "$ref": "#/$defs/waiver" } }
+  },
+  "required": ["waivers"],
+  "additionalProperties": false,
+  "$defs": {
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "scale": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "approver": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "role": { "enum": ["program_coordinator", "devops_coordinator", "qa_coordinator"] }
+      },
+      "required": ["name", "role"],
+      "additionalProperties": false
+    },
+    "waiver": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^WVR-[A-Z][A-Z0-9]*-\\d{3}$" },
+        "control": { "type": "string", "pattern": "^(BASE|MOD|SYS)-[A-Z][A-Z0-9-]*-\\d{3}$" },
+        "reason": { "type": "string", "minLength": 1 },
+        "risk": {
+          "type": "object",
+          "properties": {
+            "likelihood": { "$ref": "#/$defs/scale" },
+            "impact": { "$ref": "#/$defs/scale" },
+            "score": { "enum": [1, 2, 3, 4, 6, 9] }
+          },
+          "required": ["likelihood", "impact", "score"],
+          "additionalProperties": false
+        },
+        "compensating_controls": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          ]
+        },
+        "owner": { "type": "string", "minLength": 1 },
+        "approved_by": { "type": "array", "items": { "$ref": "#/$defs/approver" } },
+        "approved_at": { "$ref": "#/$defs/date" },
+        "expires_at": { "$ref": "#/$defs/date" },
+        "status": { "enum": ["active", "expired", "closed"] }
+      },
+      "required": ["id", "control", "reason", "risk", "compensating_controls", "owner", "approved_by", "approved_at", "expires_at", "status"],
+      "additionalProperties": false
+    }
+  }
+}

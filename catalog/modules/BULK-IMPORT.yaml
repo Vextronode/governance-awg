@@ -1,0 +1,52 @@
+catalog: module
+module: BULK-IMPORT
+version: 2.0.0
+title: Import/ekspor massal Excel/CSV
+applies_when: Sistem mengimpor atau mengekspor data massal via Excel/CSV.
+detection_hints: [maatwebsite/excel, phpspreadsheet, xlsx/exceljs/papaparse, endpoint import]
+controls:
+  - id: MOD-BULK-IMPORT-001
+    module: BULK-IMPORT
+    title: Validasi per baris dengan laporan
+    statement: >-
+      Import WAJIB memvalidasi setiap baris dengan aturan yang sama dengan input manual dan menghasilkan laporan baris yang ditolak beserta alasannya.
+    rationale: Integritas data dari import (ancaman B.1 #5, tanpa kontrol di v1).
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Test file dengan baris rusak.
+    evidence: [test]
+  - id: MOD-BULK-IMPORT-002
+    module: BULK-IMPORT
+    title: Atomik dan deteksi duplikat
+    statement: >-
+      Import WAJIB atomik (semua atau tidak sama sekali) atau eksplisit parsial dengan laporan, dan WAJIB mendeteksi duplikat
+      berdasarkan kunci alami (mis. NIK).
+    rationale: Import setengah jalan meninggalkan data tidak konsisten.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Test import gagal di tengah tidak meninggalkan data parsial.
+    evidence: [test]
+  - id: MOD-BULK-IMPORT-003
+    module: BULK-IMPORT
+    title: Cegah formula injection pada ekspor
+    statement: >-
+      Ekspor CSV/Excel WAJIB menetralkan sel yang diawali =, +, -, @ (mis. prefiks tanda kutip tunggal).
+    rationale: Formula berbahaya dijalankan di komputer petugas.
+    severity: medium
+    class: non_waivable
+    gate: G5
+    verification: Test ekspor nilai berawalan =.
+    evidence: [test]
+  - id: MOD-BULK-IMPORT-004
+    module: BULK-IMPORT
+    title: Batas ukuran dan pemrosesan
+    statement: >-
+      Import WAJIB memiliki batas ukuran file dan jumlah baris; import besar SEBAIKNYA diproses di queue.
+    rationale: Mencegah request timeout dan kehabisan memori.
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Konfigurasi batas.
+    evidence: [config]

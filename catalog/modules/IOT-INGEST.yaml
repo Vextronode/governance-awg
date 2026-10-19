@@ -1,0 +1,79 @@
+catalog: module
+module: IOT-INGEST
+version: 2.0.0
+title: Ingestion data dari perangkat (edge/IoT)
+applies_when: Perangkat fisik (mis. ESP8266/ESP32) mengirim data ke backend sistem.
+detection_hints: [endpoint ingest/telemetry/sensor, tabel readings, kode firmware di repo, API key perangkat]
+controls:
+  - id: MOD-IOT-INGEST-001
+    module: IOT-INGEST
+    title: Kredensial per perangkat
+    statement: >-
+      Setiap perangkat WAJIB memiliki kredensial sendiri yang bisa dicabut individual; satu kunci bersama untuk semua perangkat dilarang.
+    rationale: Satu perangkat dicuri tidak boleh membuka semua.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Skema tabel perangkat + uji pencabutan.
+    evidence: [code, test]
+  - id: MOD-IOT-INGEST-002
+    module: IOT-INGEST
+    title: Endpoint tulis-saja dengan validasi ketat
+    statement: >-
+      Endpoint ingestion WAJIB hanya menerima penulisan (tanpa akses baca) dan WAJIB memvalidasi skema serta rentang nilai fisik
+      yang masuk akal; nilai di luar rentang WAJIB ditolak atau ditandai, bukan diterima diam-diam.
+    rationale: Data perangkat adalah input tidak tepercaya (TLS-002 v1).
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Test payload rusak dan di luar rentang.
+    evidence: [test]
+    supersedes: [TLS-002]
+  - id: MOD-IOT-INGEST-003
+    module: IOT-INGEST
+    title: Integritas transport
+    statement: >-
+      Perangkat WAJIB mengirim via TLS. Bila perangkat terbukti tidak mampu TLS secara andal, payload WAJIB ditandatangani
+      (mis. HMAC per perangkat dengan timestamp) dan keputusan itu dicatat sebagai ADR.
+    rationale: Kemampuan TLS ESP8266 terbatas; integritas tetap wajib.
+    severity: high
+    class: waivable
+    gate: G5
+    verification: Konfigurasi firmware/endpoint atau ADR + verifikasi signature di server.
+    evidence: [code, document]
+  - id: MOD-IOT-INGEST-004
+    module: IOT-INGEST
+    title: Rate limit, ukuran payload, dan anti-duplikasi
+    statement: >-
+      Ingestion WAJIB dibatasi rate per perangkat dan ukuran payload; setiap pembacaan WAJIB punya kunci unik
+      (device_id + timestamp/sequence) agar kiriman ulang tidak menggandakan data. Waktu terima server WAJIB disimpan terpisah.
+    rationale: Kiriman ulang saat sinyal putus-sambung.
+    severity: medium
+    class: non_waivable
+    gate: G5
+    verification: Test kiriman ganda.
+    evidence: [test]
+  - id: MOD-IOT-INGEST-005
+    module: IOT-INGEST
+    title: Alert perangkat tidak melapor
+    statement: >-
+      WAJIB ada alert bila perangkat tidak mengirim data melebihi ambang yang ditetapkan di profil (default 24 jam).
+    rationale: Dari OBS v1 §6.3.
+    severity: high
+    class: waivable
+    gate: G7
+    verification: Bukti uji alert.
+    evidence: [screenshot]
+  - id: MOD-IOT-INGEST-006
+    module: IOT-INGEST
+    title: Perilaku buffer offline teruji
+    statement: >-
+      Kapasitas buffer lokal perangkat dan perilaku saat penuh (overwrite/stop) WAJIB didokumentasikan dan diuji; kehilangan data
+      WAJIB tidak terjadi diam-diam (perangkat melaporkan jumlah data yang terbuang).
+    rationale: Dari BAK-002 v1.
+    severity: high
+    class: waivable
+    gate: G6
+    verification: Laporan uji offline.
+    evidence: [report]
+    supersedes: [BAK-002]

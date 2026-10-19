@@ -1,0 +1,42 @@
+catalog: module
+module: API-CONSUMER
+version: 2.0.0
+title: Mengonsumsi API sistem lain
+applies_when: Sistem mengambil data dari API sistem lain (mis. Village Dashboard).
+detection_hints: [fetch/axios ke domain sistem lain, variabel env URL/API key sistem lain]
+controls:
+  - id: MOD-API-CONSUMER-001
+    module: API-CONSUMER
+    title: Kredensial tidak di bundle frontend
+    statement: >-
+      Kredensial API sistem lain WAJIB disimpan dan dipakai di sisi server/proxy; variabel env yang dibundel ke frontend
+      (mis. VITE_*, REACT_APP_*) bersifat publik dan WAJIB tidak berisi kredensial.
+    rationale: Kesalahan paling umum pada dashboard berbasis React.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Inspeksi bundle produksi untuk string kredensial.
+    evidence: [code, report]
+  - id: MOD-API-CONSUMER-002
+    module: API-CONSUMER
+    title: Toleran terhadap gangguan sumber
+    statement: >-
+      Panggilan ke sistem sumber WAJIB memiliki timeout dan retry terbatas dengan backoff; saat sumber tidak tersedia, tampilan
+      WAJIB menunjukkan data terakhir beserta penanda waktu/"data tidak terbaru", bukan error kosong.
+    rationale: Satu sistem sumber down tidak boleh menjatuhkan dashboard.
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Uji dengan sumber dimatikan.
+    evidence: [test, screenshot]
+  - id: MOD-API-CONSUMER-003
+    module: API-CONSUMER
+    title: Tidak menyimpan ulang data Tier 1
+    statement: >-
+      Konsumen WAJIB tidak menyimpan permanen data Tier 1 yang diterima dari sistem lain.
+    rationale: Mencegah salinan data pribadi tak terkendali.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Review skema/penyimpanan konsumen.
+    evidence: [code]

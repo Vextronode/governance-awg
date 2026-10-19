@@ -1,0 +1,65 @@
+catalog: module
+module: FILE-UPLOAD
+version: 2.0.0
+title: Unggah file oleh pengguna
+applies_when: Pengguna dapat mengunggah file (gambar produk, lampiran surat, bukti transfer, dokumen).
+detection_hints: [input type=file, multer, $request->file(), Storage::put, kolom *_path/*_url]
+controls:
+  - id: MOD-FILE-UPLOAD-001
+    module: FILE-UPLOAD
+    title: Validasi tipe dan ukuran file
+    statement: >-
+      File WAJIB divalidasi dengan allowlist ekstensi DAN deteksi tipe dari konten (MIME sniffing), dengan batas ukuran.
+      SVG/HTML WAJIB ditolak kecuali disanitasi.
+    rationale: Unggahan berbahaya (web shell, XSS via SVG).
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Test unggah file berbahaya dan file kebesaran ditolak.
+    evidence: [code, test]
+  - id: MOD-FILE-UPLOAD-002
+    module: FILE-UPLOAD
+    title: Penyimpanan aman
+    statement: >-
+      File WAJIB disimpan di lokasi yang tidak dapat dieksekusi server, dengan nama acak buatan server; nama file dari pengguna
+      WAJIB tidak dipakai sebagai path.
+    rationale: Path traversal dan eksekusi file.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Review konfigurasi storage dan kode penamaan.
+    evidence: [code, config]
+  - id: MOD-FILE-UPLOAD-003
+    module: FILE-UPLOAD
+    title: Re-encode gambar
+    statement: >-
+      Gambar SEBAIKNYA di-re-encode dan diubah ukurannya di server (menghapus metadata EXIF termasuk lokasi GPS).
+    rationale: Privasi (lokasi rumah dari foto) dan performa (PERF-006).
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Unggah foto ber-EXIF, unduh hasil, metadata hilang.
+    evidence: [test]
+  - id: MOD-FILE-UPLOAD-004
+    module: FILE-UPLOAD
+    title: File privat lewat endpoint berotorisasi
+    statement: >-
+      File yang memuat data Tier 1/3 (lampiran surat, bukti transfer) WAJIB disajikan lewat endpoint berotorisasi atau signed URL
+      berumur pendek, bukan URL publik permanen.
+    rationale: URL publik bisa ditebak atau tersebar.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Akses URL file oleh pengguna lain/tanpa login ditolak.
+    evidence: [test]
+  - id: MOD-FILE-UPLOAD-005
+    module: FILE-UPLOAD
+    title: Kuota unggah
+    statement: >-
+      Unggahan SEBAIKNYA dibatasi kuota/rate per pengguna, dan pemakaian storage unggahan WAJIB masuk pemantauan disk (OBS-006).
+    rationale: Disk hosting desa terbatas.
+    severity: medium
+    class: waivable
+    gate: G6
+    verification: Konfigurasi limit.
+    evidence: [config]

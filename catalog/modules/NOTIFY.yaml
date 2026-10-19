@@ -1,0 +1,43 @@
+catalog: module
+module: NOTIFY
+version: 2.0.0
+title: Notifikasi keluar (WhatsApp/email/SMS/push)
+applies_when: Sistem mengirim notifikasi ke pengguna melalui layanan pihak ketiga.
+detection_hints: [mailer config, WhatsApp/SMS gateway SDK, queue job notifikasi]
+controls:
+  - id: MOD-NOTIFY-001
+    module: NOTIFY
+    title: Kegagalan tercatat dan diulang terbatas
+    statement: >-
+      Pengiriman notifikasi WAJIB lewat queue/job dengan retry terbatas; kegagalan akhir WAJIB tercatat sebagai ERROR (OBS-002)
+      dan tidak menggagalkan transaksi utama.
+    rationale: Gateway eksternal tidak andal.
+    severity: medium
+    class: waivable
+    gate: G5
+    verification: Uji dengan gateway dimatikan.
+    evidence: [test]
+  - id: MOD-NOTIFY-002
+    module: NOTIFY
+    title: Isi notifikasi minimal
+    statement: >-
+      Isi notifikasi WAJIB tidak memuat data Tier 1 melebihi yang perlu (mis. tanpa NIK); gunakan tautan ke aplikasi yang
+      memerlukan login untuk detail.
+    rationale: Pesan WhatsApp/email mudah diteruskan dan dibaca orang lain.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Review template notifikasi.
+    evidence: [code]
+  - id: MOD-NOTIFY-003
+    module: NOTIFY
+    title: Risiko penyedia didokumentasikan
+    statement: >-
+      Pilihan penyedia notifikasi WAJIB dicatat sebagai ADR, termasuk risiko layanan tidak resmi (mis. gateway WhatsApp
+      non-resmi dapat diblokir) dan rencana cadangan.
+    rationale: Ketergantungan pihak ketiga setelah handoff.
+    severity: medium
+    class: waivable
+    gate: G6
+    verification: ADR.
+    evidence: [document]

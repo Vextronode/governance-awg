@@ -1,0 +1,100 @@
+catalog: module
+module: PAYMENT
+version: 2.0.0
+title: Transaksi dan pembayaran
+applies_when: Sistem membuat order/transaksi berbayar, baik lewat payment gateway maupun transfer manual.
+detection_hints: [tabel orders/transactions/payments, endpoint checkout, konfigurasi gateway, unggah bukti transfer]
+controls:
+  - id: MOD-PAYMENT-001
+    module: PAYMENT
+    title: Tidak menyimpan data kartu
+    statement: >-
+      Data kartu (nomor kartu, CVV, tanggal kedaluwarsa) WAJIB tidak pernah melewati atau tersimpan di server sistem; pembayaran
+      WAJIB memakai halaman hosted/tokenisasi penyedia jasa pembayaran berizin Bank Indonesia.
+    rationale: Mengganti "setara PCI" di v1 yang tidak realistis.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Review alur checkout dan skema DB.
+    evidence: [code]
+  - id: MOD-PAYMENT-002
+    module: PAYMENT
+    title: Status pembayaran diverifikasi server-side
+    statement: >-
+      Status lunas WAJIB hanya ditetapkan dari notifikasi server-to-server (webhook) yang tanda tangannya diverifikasi dan/atau
+      dari pemeriksaan status ke API penyedia; parameter redirect di sisi klien WAJIB tidak dipercaya.
+    rationale: Pemalsuan status bayar.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Test webhook dengan tanda tangan salah ditolak.
+    evidence: [code, test]
+  - id: MOD-PAYMENT-003
+    module: PAYMENT
+    title: Idempotensi webhook
+    statement: >-
+      Pemrosesan webhook/konfirmasi pembayaran WAJIB idempoten (referensi transaksi unik); notifikasi ganda tidak boleh memproses
+      order dua kali.
+    rationale: Penyedia mengirim ulang notifikasi.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Test mengirim notifikasi yang sama dua kali.
+    evidence: [test]
+  - id: MOD-PAYMENT-004
+    module: PAYMENT
+    title: Nominal dihitung di server
+    statement: >-
+      Total, harga, ongkos, dan diskon WAJIB dihitung di server dari data DB; nilai harga dari klien WAJIB diabaikan.
+    rationale: Manipulasi harga lewat request.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Test mengirim harga palsu tidak memengaruhi total.
+    evidence: [test]
+  - id: MOD-PAYMENT-005
+    module: PAYMENT
+    title: State machine order dan kedaluwarsa
+    statement: >-
+      Order WAJIB memiliki state machine eksplisit (mis. pending -> paid -> processing -> shipped -> completed, serta cancelled/expired),
+      dan order belum bayar WAJIB kedaluwarsa otomatis serta melepas reservasi stok.
+    rationale: Stok terkunci oleh order yang ditinggalkan.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Lokasi definisi state + test kedaluwarsa.
+    evidence: [code, test]
+  - id: MOD-PAYMENT-006
+    module: PAYMENT
+    title: Rekonsiliasi
+    statement: >-
+      WAJIB ada laporan atau prosedur rekonsiliasi berkala antara order di sistem dan catatan penyedia pembayaran/rekening.
+    rationale: Selisih uang harus terdeteksi.
+    severity: medium
+    class: waivable
+    gate: G7
+    verification: Prosedur di book guide admin + contoh laporan.
+    evidence: [document]
+  - id: MOD-PAYMENT-007
+    module: PAYMENT
+    title: Pembayaran manual (bila dipakai)
+    statement: >-
+      Bila memakai transfer manual: bukti transfer WAJIB mengikuti modul FILE-UPLOAD, konfirmasi hanya oleh peran berwenang,
+      dan setiap konfirmasi/penolakan WAJIB tercatat di log audit.
+    rationale: Jalur sementara selama gateway belum diputuskan.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Test peran tidak berwenang ditolak + sampel log audit.
+    evidence: [test, screenshot]
+  - id: MOD-PAYMENT-008
+    module: PAYMENT
+    title: Pemisahan kunci sandbox dan production
+    statement: >-
+      Non-production WAJIB memakai kunci sandbox penyedia; kunci production WAJIB hanya ada di environment production.
+    rationale: Transaksi uji tidak boleh menyentuh uang nyata, dan kunci production tidak boleh bocor ke staging.
+    severity: high
+    class: non_waivable
+    gate: G7
+    verification: Konfigurasi per environment (nama variabel, tanpa nilai).
+    evidence: [config]
