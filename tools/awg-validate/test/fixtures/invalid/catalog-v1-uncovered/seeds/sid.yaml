@@ -1,0 +1,57 @@
+# Fixture invalid (catalog-v1-uncovered). AUTH-005 tidak lagi tercakup.
+# USULAN BELUM TERVERIFIKASI — dikonfirmasi saat adopsi (templates/claude/awg-adopt.md)
+# seeds/sid.yaml
+system: SID
+name: Sistem Informasi Desa (SIDUTama)
+stack_confirmed: {backend: "Laravel + Sanctum", frontend: React, database: PostgreSQL}
+candidate_modules: [PII, APPROVAL-WORKFLOW, FILE-UPLOAD, CMS, PUBLIC-API, NOTIFY, BULK-IMPORT, PWA]
+candidate_critical_paths:
+  - Warga mengajukan permohonan surat
+  - Approval berjenjang RT -> RW -> Kadus -> Kasi/Kaur hingga nomor surat terbit
+  - Login petugas dan warga
+  - Pengelolaan data warga oleh petugas
+proposed_sys_controls:
+  - id: SYS-SID-001
+    title: Urutan rantai approval ditegakkan
+    statement: >-
+      Urutan RT -> RW -> Kadus -> Kasi/Kaur WAJIB ditegakkan state machine server; status terminal (terbit/ditolak) WAJIB tidak dapat diubah.
+    severity: critical
+    class: non_waivable
+    gate: G5
+  - id: SYS-SID-002
+    title: letter_number unik per jenis dan periode
+    statement: >-
+      letter_number WAJIB dibangkitkan atomik, unik per jenis surat dan periode penomoran yang ditetapkan desa, dijamin constraint unik DB, dengan test pembangkitan bersamaan.
+    severity: high
+    class: non_waivable
+    gate: G5
+  - id: SYS-SID-003
+    title: Antrean approval di-scope ke wilayah
+    statement: >-
+      Daftar antrean RT/RW/Kadus WAJIB difilter wilayah aktor (rt_id/rw_id/hamlet_id) di level query; warga WAJIB hanya melihat permohonannya sendiri.
+    severity: critical
+    class: non_waivable
+    gate: G5
+  - id: SYS-SID-004
+    title: MFA peran approval final dan admin desa
+    statement: >-
+      Petugas Desa, Kasi Pelayanan, dan Kaur TU WAJIB memakai MFA dengan prosedur pemulihan; MFA untuk RT/RW/Kadus SEBAIKNYA menyusul pada fase berikutnya.
+    severity: high
+    class: waivable
+    gate: G7
+    supersedes: [AUTH-004]
+  - id: SYS-SID-005
+    title: Verifikasi keaslian surat (usulan baru)
+    statement: >-
+      Surat yang diterbitkan SEBAIKNYA memuat QR/kode verifikasi yang mengarah ke halaman publik berisi nomor, jenis, tanggal, dan status surat tanpa data pribadi.
+    severity: medium
+    class: waivable
+    gate: G6
+  - id: SYS-SID-006
+    title: Idle timeout peran approval
+    statement: >-
+      Peran RT, RW, Kadus, Kasi, Kaur, dan Petugas Desa WAJIB memiliki idle timeout <= 30 menit.
+    severity: high
+    class: waivable
+    gate: G5
+    supersedes: [AUTH-003]

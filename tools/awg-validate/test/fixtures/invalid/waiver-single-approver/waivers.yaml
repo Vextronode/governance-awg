@@ -1,0 +1,17 @@
+# Fixture invalid (waiver-single-approver).
+waivers:
+  - id: WVR-SID-001
+    control: BASE-SEC-009
+    reason: CSP belum bisa dipasang di hosting uji
+    risk:
+      likelihood: 2
+      impact: 1
+      score: 2
+    compensating_controls: Header lain sudah aktif
+    owner: Ani
+    approved_by:
+      - name: Eka
+        role: program_coordinator
+    approved_at: 2026-10-01
+    expires_at: 2026-12-15
+    status: active

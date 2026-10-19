@@ -1,0 +1,73 @@
+# Fixture invalid (tm-rating).
+awg_version: v2.0.0
+system_info:
+  system_name: Sistem Uji
+  tech_lead: Ani
+  last_updated: 2026-10-20
+  program_gate_at_submission: G3
+review:
+  reviewer: Dodi
+  date: 2026-10-24
+  note: Direview
+dfd_elements:
+  external_entities:
+    - name: Warga
+      description: Pengguna
+      trust_level: untrusted
+  processes:
+    - name: Ajukan surat
+      description: Proses pengajuan
+      data_classification_touched:
+        - PII - Restricted
+  data_stores:
+    - name: DB
+      description: Database
+      data_classification: PII - Restricted
+  data_flows:
+    - name: Submit
+      source: Warga
+      destination: Ajukan surat
+      data_classification: PII - Restricted
+      crosses_trust_boundary: true
+trust_boundaries:
+  - boundary_id: TB-01
+    description: publik -> sesi warga
+    elements_involved:
+      - Warga
+      - Ajukan surat
+  - boundary_id: TB-02
+    description: sesi warga -> sesi petugas
+    elements_involved:
+      - Ajukan surat
+stride_findings:
+  - finding_id: SID-001
+    element: Ajukan surat
+    trust_boundary_ref: TB-01
+    stride_category: Spoofing
+    threat_description: Login brute-force.
+    likelihood: 3
+    impact: 2
+    score: 6
+    risk_rating: high
+    related_controls:
+      - BASE-SEC-001
+    mitigation: Rate limit.
+    mitigation_status: not_started
+    owner: Ani
+    verification_evidence: ""
+    source: team
+  - finding_id: SID-002
+    element: Ajukan surat
+    trust_boundary_ref: TB-02
+    stride_category: Elevation of Privilege
+    threat_description: Warga mengakses fungsi petugas.
+    likelihood: 2
+    impact: 3
+    score: 6
+    risk_rating: medium
+    related_controls: []
+    mitigation: Policy per peran.
+    mitigation_status: done
+    owner: Budi
+    verification_evidence: tests/Feature/RoleTest.php
+    source: claude-draft

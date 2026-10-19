@@ -1,0 +1,23 @@
+system: SID
+controls:
+  - id: SYS-SID-001
+    title: Kontrol uji critical
+    statement: Sistem uji WAJIB menegakkan aturan uji.
+    rationale: Fixture.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Test uji.
+    evidence: [test]
+    source: team
+  - id: SYS-SID-002
+    title: Kontrol uji kondisional
+    statement: Bila fitur uji ada, sistem WAJIB mencatatnya.
+    rationale: Fixture.
+    severity: medium
+    class: waivable
+    gate: G6
+    verification: Review.
+    evidence: [code]
+    conditional: true
+    source: seed

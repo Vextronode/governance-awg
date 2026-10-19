@@ -1,0 +1,65 @@
+# Fixture: subset katalog baseline nyata untuk test perintah system.
+catalog: baseline
+version: 2.0.0
+controls:
+  - id: BASE-GOV-001
+    domain: GOV
+    title: Threat model sistem diajukan dan direview
+    statement: Setiap sistem WAJIB memiliki docs/awg/threat-model.yaml (DFD + STRIDE, skala risiko F.3) yang mencakup seluruh trust boundary minimum dan telah direview DevOps Coordinator.
+    rationale: Ancaman harus dikenali sebelum dimitigasi; menggantikan AWG-SEC-002/003.
+    severity: high
+    class: non_waivable
+    gate: G3
+    verification: Validator lulus untuk threat-model.yaml; setiap perlintasan trust boundary punya >=1 finding; ada catatan review DevOps Coordinator (tanggal + nama) di file.
+    evidence:
+      - document
+    supersedes: []
+  - id: BASE-SEC-001
+    domain: SEC
+    title: Autentikasi memakai mekanisme framework/library teruji
+    statement: "Autentikasi WAJIB memakai mekanisme framework atau library yang teruji dan terpelihara (mis. Laravel Sanctum/Fortify; untuk Express: library mapan untuk session atau JWT). Logika kriptografi dan penyimpanan kredensial buatan sendiri dilarang."
+    rationale: Autentikasi buatan sendiri adalah sumber kerentanan klasik.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Review kode modul auth; daftar dependency auth dan versinya.
+    evidence:
+      - code
+    refs:
+      - ASVS - Authentication
+    supersedes:
+      - AUTH-001
+  - id: BASE-SEC-009
+    domain: SEC
+    title: Security headers
+    statement: "Respons production WAJIB menyertakan HSTS, X-Content-Type-Options: nosniff, proteksi framing (frame-ancestors atau X-Frame-Options) dan Referrer-Policy. Content-Security-Policy SEBAIKNYA diterapkan."
+    rationale: Lapisan pertahanan murah terhadap clickjacking, sniffing, downgrade.
+    severity: medium
+    class: waivable
+    gate: G6
+    verification: Pemeriksaan header pada URL staging/production (curl -I atau scanner).
+    evidence:
+      - screenshot
+      - report
+  - id: BASE-PRIV-001
+    domain: PRIV
+    title: Inventaris dan klasifikasi data
+    statement: Setiap entitas/field di Data Dictionary (artefak G2) WAJIB diberi label Tier 1-4, dan field data pribadi WAJIB ditandai beserta tujuan pemrosesannya.
+    rationale: Kontrol lain bergantung pada klasifikasi.
+    severity: high
+    class: non_waivable
+    gate: G3
+    verification: Data Dictionary memuat kolom tier dan tujuan untuk setiap field.
+    evidence:
+      - document
+  - id: BASE-QA-001
+    domain: QA
+    title: Critical paths terdefinisi
+    statement: Profil sistem WAJIB mendaftar critical paths (alur yang bila gagal membuat sistem tidak berguna atau merusak data), minimal 3, disetujui Program Coordinator.
+    rationale: Dasar untuk test wajib, monitoring, dan UAT.
+    severity: high
+    class: non_waivable
+    gate: G5
+    verification: Daftar di profile.yaml beserta tanda persetujuan.
+    evidence:
+      - document

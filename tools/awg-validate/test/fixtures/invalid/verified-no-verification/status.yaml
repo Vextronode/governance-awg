@@ -1,0 +1,127 @@
+# Fixture invalid (verified-no-verification).
+awg_version: v2.0.0
+system: SID
+controls:
+  - id: BASE-GOV-001
+    status: verified
+    owner: Ani
+    evidence:
+      - type: document
+        ref: docs/awg/threat-model.yaml
+        note: ""
+    waiver: null
+    reason: null
+    verification:
+      - verifier: Citra
+        verifier_role: rotation
+        verifier_system: CIMART
+        date: 2026-10-25
+        result: verified
+        note: Validator lulus
+    notes: ""
+  - id: BASE-PRIV-001
+    status: verified
+    owner: Budi
+    evidence:
+      - type: document
+        ref: docs/data-dictionary.md
+        note: ""
+    waiver: null
+    reason: null
+    verification:
+      - verifier: Eka
+        verifier_role: program_coordinator
+        verifier_system: AWG
+        date: 2026-10-25
+        result: verified
+        note: Kolom tier lengkap
+    notes: ""
+  - id: BASE-SEC-001
+    status: verified
+    owner: Budi
+    evidence:
+      - type: code
+        ref: app/Http/Controllers/AuthController.php
+        note: ""
+    waiver: null
+    reason: null
+    verification:
+      - verifier: Citra
+        verifier_role: rotation
+        verifier_system: CIMART
+        date: 2026-10-26
+        result: verified
+        note: Sanctum
+      - verifier: Dodi
+        verifier_role: devops_coordinator
+        verifier_system: AWG
+        date: 2026-10-27
+        result: verified
+        note: Sanctum
+    notes: ""
+  - id: BASE-SEC-009
+    status: waived
+    owner: Ani
+    evidence: []
+    waiver: WVR-SID-001
+    reason: null
+    verification: []
+    notes: ""
+  - id: BASE-QA-001
+    status: verified
+    owner: Ani
+    evidence:
+      - type: document
+        ref: docs/awg/profile.yaml
+        note: critical_paths
+    waiver: null
+    reason: null
+    verification: []
+    notes: ""
+  - id: MOD-CMS-001
+    status: in_progress
+    owner: Budi
+    evidence: []
+    waiver: null
+    reason: null
+    verification: []
+    notes: ""
+  - id: MOD-CMS-002
+    status: not_started
+    owner: ""
+    evidence: []
+    waiver: null
+    reason: null
+    verification: []
+    notes: ""
+  - id: SYS-SID-001
+    status: rejected
+    owner: Budi
+    evidence:
+      - type: test
+        ref: tests/Feature/RuleTest.php
+        note: ""
+    waiver: null
+    reason: null
+    verification:
+      - verifier: Citra
+        verifier_role: rotation
+        verifier_system: CIMART
+        date: 2026-10-28
+        result: rejected
+        note: Test belum mencakup kasus negatif
+    notes: ""
+  - id: SYS-SID-002
+    status: not_applicable
+    owner: Ani
+    evidence: []
+    waiver: null
+    reason: Fitur uji tidak ada di sistem
+    verification:
+      - verifier: Citra
+        verifier_role: rotation
+        verifier_system: CIMART
+        date: 2026-10-28
+        result: verified
+        note: Fitur memang tidak ada
+    notes: ""

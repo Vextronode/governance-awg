@@ -1,0 +1,20 @@
+{
+  "name": "awg-validate",
+  "version": "2.0.0",
+  "description": "Validator katalog dan file docs/awg/ sistem untuk standar AWG v2",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "awg-validate": "./awg-validate.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "yaml": "2.9.1"
+  }
+}
