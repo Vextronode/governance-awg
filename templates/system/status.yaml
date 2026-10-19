@@ -1,0 +1,14 @@
+# Status per kontrol (format: RFC-0001 M.3, schema: catalog/schema/status.schema.json)
+# Wajib memuat tepat satu entri untuk setiap kontrol yang berlaku: semua BASE, MOD dari modul aktif, dan SYS lokal.
+# Contoh di bawah hanya satu entri; status verified hanya diisi verifikator di luar tim (framework 03).
+awg_version: v2.0.0
+system: SID
+controls:
+  - id: BASE-SEC-001
+    status: not_started       # C.4
+    owner: ""
+    evidence: []              # [{type: test, ref: "tests/Feature/AuthTest.php", note: ""}]
+    waiver: null
+    reason: null              # wajib untuk not_applicable
+    verification: []          # E.2
+    notes: ""

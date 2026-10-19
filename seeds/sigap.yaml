@@ -1,0 +1,42 @@
+# USULAN BELUM TERVERIFIKASI — dikonfirmasi saat adopsi (templates/claude/awg-adopt.md)
+# seeds/sigap.yaml
+system: SIGAP
+name: SIGAP
+stack_confirmed: {backend: Express, frontend: React, database: PostgreSQL}
+unconfirmed_facts:
+  - Apakah masih ada perangkat ESP8266/ESP32 (menentukan modul IOT-INGEST)
+  - Apakah ada fitur GIS/peta dan data spasial
+  - Apakah SIGAP mengirim peringatan/notifikasi ke warga (menentukan SYS-SIGAP-004 dan NOTIFY)
+  - Mekanisme autentikasi pengganti Firebase Auth
+candidate_modules: [IOT-INGEST, PUBLIC-API, NOTIFY, PWA]
+candidate_critical_paths: [ditentukan saat adopsi dari kode dan wawancara Tech Lead]
+proposed_sys_controls:
+  - id: SYS-SIGAP-001
+    title: Hardening Express
+    statement: >-
+      Aplikasi Express WAJIB: memakai helmet (atau header setara SEC-009), menonaktifkan x-powered-by, membatasi ukuran body request, memakai error handler terpusat yang tidak mengirim stack trace di production, dan rate limit pada endpoint auth.
+    severity: high
+    class: non_waivable
+    gate: G5
+  - id: SYS-SIGAP-002
+    title: Konfigurasi node-postgres
+    statement: >-
+      Koneksi PostgreSQL WAJIB memakai Pool dengan max, idleTimeoutMillis, connectionTimeoutMillis, dan statement_timeout terkonfigurasi; semua query WAJIB memakai placeholder ($1, $2, ...).
+    severity: high
+    class: non_waivable
+    gate: G5
+  - id: SYS-SIGAP-003
+    title: Autentikasi pasca-migrasi dari Firebase
+    statement: >-
+      Autentikasi WAJIB memakai library mapan; bila memakai JWT: algoritma ditetapkan eksplisit saat verifikasi, secret minimal 256-bit dari env, masa berlaku access token pendek (<= 60 menit), dan refresh token (bila ada) dirotasi serta dapat dicabut.
+    severity: critical
+    class: non_waivable
+    gate: G5
+  - id: SYS-SIGAP-004
+    title: Kebenaran logika peringatan (kondisional)
+    statement: >-
+      Bila SIGAP menghasilkan peringatan lingkungan/bencana: logika ambang WAJIB diuji termasuk kasus batas, dan kegagalan pengiriman peringatan WAJIB memicu alert teknis.
+    severity: high
+    class: waivable
+    gate: G6
+    conditional: true

@@ -1,0 +1,18 @@
+# Waiver (format: RFC-0001 D.2 / M.5, schema: catalog/schema/waivers.schema.json)
+# Hanya untuk kontrol class: waivable. Maksimal 90 hari sejak disetujui atau tanggal target G7, mana yang lebih dulu.
+# Dua penyetuju: Program Coordinator dan Coordinator domain terkait; penyetuju bukan anggota tim sistem.
+# Perpanjangan = waiver baru dengan ID baru.
+waivers: []
+# Contoh format (hapus tanda komentar dan sesuaikan):
+#  - id: WVR-SID-001
+#    control: BASE-SEC-009
+#    reason: ""
+#    risk: {likelihood: 2, impact: 1, score: 2}     # skala 1-3, score = likelihood x impact
+#    compensating_controls: ""                       # boleh "tidak ada" dengan alasan
+#    owner: ""                                       # Tech Lead sistem
+#    approved_by:
+#      - {name: "", role: program_coordinator}
+#      - {name: "", role: devops_coordinator}        # Coordinator domain terkait
+#    approved_at: "YYYY-MM-DD"
+#    expires_at: "YYYY-MM-DD"
+#    status: active                                  # active | expired | closed

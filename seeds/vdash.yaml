@@ -1,0 +1,16 @@
+# USULAN BELUM TERVERIFIKASI — dikonfirmasi saat adopsi (templates/claude/awg-adopt.md)
+# seeds/vdash.yaml
+system: VDASH
+name: Village Dashboard
+stack_confirmed: {}
+unconfirmed_facts: [stack, hosting, sistem sumber yang sudah terintegrasi, ada/tidaknya login]
+candidate_modules: [API-CONSUMER, CMS, PWA]
+candidate_critical_paths: [ditentukan saat adopsi]
+proposed_sys_controls:
+  - id: SYS-VDASH-001
+    title: Hanya data agregat
+    statement: >-
+      Dashboard WAJIB hanya menampilkan data agregat; drill-down ke individu warga/pembeli dilarang.
+    severity: critical
+    class: non_waivable
+    gate: G5

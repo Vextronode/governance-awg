@@ -1,0 +1,57 @@
+# Template workflow untuk repo sistem: salin ke .github/workflows/awg-validate.yml
+# Memvalidasi docs/awg/ terhadap governance-awg pada tag yang tercatat di docs/awg/awg.lock.yaml.
+#
+# Mode default WARN-ONLY (continue-on-error: true) selama masa adopsi.
+# Untuk menjadikannya BLOCKING (dilakukan Tech Lead setelah utang retroaktif beres):
+#   hapus baris `continue-on-error: true` pada langkah "Validate docs/awg",
+#   lalu jadikan job `awg-validate` sebagai required status check di aturan proteksi branch.
+name: awg-validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  awg-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo sistem
+        uses: actions/checkout@v4
+
+      - name: Baca versi AWG dari awg.lock.yaml
+        id: lock
+        run: |
+          version=$(sed -n 's/^version:[[:space:]]*//p' docs/awg/awg.lock.yaml | tr -d '"'"'"' \r')
+          if [ -z "$version" ]; then
+            echo "version tidak ditemukan di docs/awg/awg.lock.yaml" >&2
+            exit 2
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout governance-awg pada tag terkunci
+        uses: actions/checkout@v4
+        with:
+          repository: Vextronode/governance-awg
+          ref: ${{ steps.lock.outputs.version }}
+          path: .governance-awg
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install validator
+        working-directory: .governance-awg/tools/awg-validate
+        run: npm ci
+
+      - name: Validate docs/awg
+        continue-on-error: true   # warn-only selama adopsi; hapus baris ini untuk mode blocking
+        run: |
+          node .governance-awg/tools/awg-validate/awg-validate.mjs system \
+            --governance .governance-awg \
+            --awg docs/awg \
+            --summary

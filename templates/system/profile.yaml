@@ -1,0 +1,49 @@
+# Profil sistem AWG v2 (format: RFC-0001 M.2, schema: catalog/schema/profile.schema.json)
+# Isi hanya dengan fakta dari kode/konfigurasi atau jawaban Tech Lead. Yang belum diketahui: TODO(awg).
+awg_version: v2.0.0
+system:
+  id: SID                     # SID | SIGAP | CIMART | VDASH | <baru, disetujui AWG>
+  name: ""
+  repo: ""
+  tech_lead: ""
+  team: []                    # nama anggota; dipakai untuk cek independensi verifikator
+stack:
+  backend: ""
+  frontend: ""
+  database: ""
+  runtime_versions: {}        # mis. php: "8.3", node: "20"
+  other: []
+adoption:
+  date: ""
+  gate_at_adoption: ""        # gate terakhir yang sudah lulus (E.4)
+current_gate: ""              # gate terakhir yang lulus
+environments:
+  production: {hosting: "", url: "", managed_by: ""}
+  staging:    {hosting: "", url: "", managed_by: ""}
+hosting_assessment: {}        # BASE-REL-008
+modules:
+  active:
+    - id: PII
+      reason: ""
+      evidence: []            # path kode
+  inactive:
+    - id: PAYMENT
+      reason: ""
+critical_paths:               # BASE-QA-001
+  - id: CP-01
+    name: ""
+    tests: []                 # path test (BASE-QA-002)
+    log_events: []            # BASE-OBS-002
+  # approved_by: ""
+performance:
+  expected_peak_concurrent_users: null
+  basis: ""
+  overrides: []               # hanya memperketat
+security:
+  idle_timeout_minutes: null  # BASE-SEC-003
+observability:
+  error_alert_threshold: ""
+  business_metrics: []
+contacts:                     # berbasis peran
+  incident_tech: ""
+  data_controller_contact: "" # kontak resmi Pengendali (PRIV-008)
