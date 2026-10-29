@@ -4,7 +4,7 @@ Standar kualitas, keamanan, dan privasi Architecture Working Group (AWG) untuk s
 
 Repo ini adalah **satu-satunya sumber definisi kontrol**. Status kepatuhan tiap sistem tidak disimpan di sini, melainkan di folder `docs/awg/` repo masing-masing sistem, dan diperiksa dengan validator dari repo ini.
 
-Versi saat ini: **v2.0.0** ([CHANGELOG](CHANGELOG.md)). Migrasi dari v1: [MIGRATION.md](MIGRATION.md).
+Versi saat ini: **v2.1.0** ([CHANGELOG](CHANGELOG.md)). Migrasi dari v1: [MIGRATION.md](MIGRATION.md).
 
 ## Dua cara pakai
 
