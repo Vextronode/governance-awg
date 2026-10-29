@@ -55,10 +55,36 @@ Memeriksa:
 - verifikasi (E.2): verifikator bukan anggota `system.team`/`tech_lead`; kontrol `critical` butuh verifikasi `rotation` dan Coordinator domain; Program Coordinator bukan verifikator tunggal kontrol non-PRIV/GOV;
 - threat model: `score = likelihood × impact`, `risk_rating` sesuai F.3, setiap trust boundary punya finding, `done` butuh `verification_evidence`.
 
+Mode tata kelola ([RFC-0002](../../rfc/0002-operating-modes.md), [framework 09](../../00-framework/09-operating-modes.md)) dibaca dari `governance.mode` di `profile.yaml`. Tanpa blok `governance`, mode dianggap `team`, dan pemeriksaan di atas berlaku persis seperti v2.0.0. Di mode `solo`, aturan verifikasi dan penyetuju waiver diganti:
+
+| Kode | Jenis | Aturan |
+|---|---|---|
+| `governance-mode` | error | `governance.mode` bukan `team`/`solo` |
+| `governance-solo-fields` | error | Mode solo tanpa `reason`/`owner` (A.1) |
+| `governance-owner` | error | `owner` tidak ada di `system.team` (A.1) |
+| `solo-implemented-at` | error | `implemented`/`verified` tanpa `implemented_at` (A.2) |
+| `solo-verification` | error | `verified` tanpa `self_review`/`external_reviewer` berhasil (S-1) |
+| `solo-cooling-off` | error | `self_review` kurang dari 1 hari setelah `implemented_at` (S-2) |
+| `solo-note` | error | `self_review` tanpa `note` (S-3) |
+| `solo-self-owner` | error | Tim ≥ 2 orang, `self_review` oleh `owner` entri (S-4) |
+| `external-team-member` | error | `external_reviewer` tercantum di `system.team` (S-5) |
+| `solo-critical-evidence` | error | Kontrol `critical` tanpa external reviewer maupun `self_review` + evidence `test`/`ci_run` (S-6) |
+| `solo-role-ignored` | peringatan | Role `rotation`/Coordinator di mode solo, tidak dihitung (S-7) |
+| `solo-waiver-approvers` | error | Waiver tanpa penyetuju `owner` atau `external_reviewer` di luar tim (W-1) |
+| `solo-waiver-renewal` | error | Waiver ke-3 dst. untuk kontrol yang sama tanpa `external_reviewer` (W-3) |
+
+Di mode `team`, role `self_review`/`external_reviewer` tidak dihitung (A.6):
+
+| Kode | Jenis | Aturan |
+|---|---|---|
+| `self-review-in-team` | error | `self_review` pada entri yang bukan `verified` |
+| `solo-verification-in-team` | peringatan | Entri `verified` yang hanya didukung role solo; dihitung sebagai pemblokir di `--gate` |
+
 Opsi:
 
 - `--gate Gx` — daftar kontrol pemblokir untuk klaim gate Gx (framework 03 §3), dengan penanda **utang retroaktif** untuk kontrol yang gate-nya ≤ `adoption.gate_at_adoption` (§4). Mulai G6, finding threat model `critical`/`high` yang `not_started` juga memblokir (BASE-GOV-002).
 - `--summary` — rekap per status, severity, dan domain/modul dalam format markdown ke stdout. Rekap ini **bukan** sumber kebenaran dan tidak disimpan.
+- Dengan `--gate` atau `--summary`, baris pertama output adalah mode tata kelola beserta jumlah kontrol `verified` lewat `external_reviewer` dibanding lewat `self_review` saja (RFC-0002 A.5).
 
 Contoh dari repo sistem (governance-awg di-checkout ke `.governance-awg`):
 
@@ -97,5 +123,8 @@ Test memakai `node:test` dengan fixture di `test/fixtures/`:
 - `governance-mini/` — subset katalog untuk test perintah `system` (schema diambil dari `catalog/schema/` repo);
 - `valid/` — `docs/awg/` valid dengan semua jenis status;
 - `invalid/<aturan>/` — file yang menimpa `valid/` (atau salinan governance untuk `catalog-*`) dengan satu pelanggaran.
+- `valid-solo/` — `docs/awg/` valid mode solo (RFC-0002);
+- `invalid-solo/<aturan>/` — file yang menimpa `valid-solo/` dengan satu pelanggaran aturan solo;
+- `mode-switch-team/` — overlay `valid-solo/` dengan mode diganti `team` (A.6).
 
 Variabel `AWG_VALIDATE_TODAY=YYYY-MM-DD` menetapkan "hari ini" untuk pemeriksaan kedaluwarsa waiver; dipakai test agar hasilnya tidak berubah seiring waktu.

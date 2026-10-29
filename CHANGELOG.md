@@ -2,6 +2,30 @@
 
 Format mengikuti SemVer (RFC-0001 N.5): MAJOR untuk penghapusan kontrol atau pengetatan yang bisa membuat sistem patuh menjadi tidak patuh; MINOR untuk kontrol/modul baru yang opsional atau gate di masa depan; PATCH untuk perbaikan teks tanpa perubahan makna.
 
+## [2.1.0] — 2026-10-29
+
+Mode tata kelola `team` dan `solo` sesuai [RFC-0002](rfc/0002-operating-modes.md) dan [framework 09](00-framework/09-operating-modes.md). Mode mengubah *siapa* yang memverifikasi, bukan *apa* yang wajib.
+
+**Alasan versi MINOR:** semua perubahan bersifat opsional. Profil tanpa blok `governance` diperlakukan sebagai `team` dengan perilaku identik v2.0.0, sehingga sistem yang patuh v2.0.0 tetap patuh.
+
+### Ditambahkan
+
+- Mode `solo` untuk proyek yang memakai standar ini secara mandiri: blok `governance` di `profile.yaml` (A.1), aturan verifikasi S-1 s.d. S-7 (A.3), aturan waiver W-1 s.d. W-3 (A.4), baris mode di output `--summary`/`--gate` dan laporan gate (A.5), serta aturan pergantian mode (A.6).
+- Role verifikator baru `self_review` dan `external_reviewer`; role penyetuju waiver baru `owner` dan `external_reviewer`.
+- Field status `implemented_at` (wajib di mode `solo` untuk `implemented`/`verified`, opsional di `team`).
+- Adopsi sistem tanpa seed (A.7): command adopsi menerima ID sistem apa pun yang cocok dengan `^[A-Z][A-Z0-9]*$` dan melewati langkah seed bila `seeds/<id>.yaml` tidak ada.
+- Validator: kode error dan peringatan baru untuk mode solo dan peralihan mode (lihat `tools/awg-validate/README.md`), beserta 21 test baru.
+- `00-framework/09-operating-modes.md`, `rfc/0002-operating-modes.md`, dan open questions bagian C.
+
+### Diubah
+
+- Template `templates/system/` memakai `v2.1.0` dan memuat blok `governance` (default `team`) serta `implemented_at`. Template laporan gate mencantumkan mode, dan command adopsi menanyakan mode sebagai langkah pertama.
+
+### Tidak berubah
+
+- Katalog kontrol: `catalog/baseline.yaml`, `catalog/modules/*.yaml`, `seeds/`, dan `catalog/GATE-MATRIX.md` identik dengan v2.0.0. Field `version: 2.0.0` di file katalog tetap, karena isinya tidak berubah.
+- Perilaku mode `team`: seluruh 38 test v2.0.0 lulus tanpa diubah.
+
 ## [2.0.0] — 2026-10-19
 
 Restrukturisasi total standar AWG menjadi model 3 lapis (Baseline · Modul · Profil Sistem) sesuai [RFC-0001](rfc/0001-awg-v2-restructure.md). Menggantikan seluruh isi v1 (AWG-QC-001, AWG-OBS-001/002, AWG-SEC-001/002/003/005/006, `security-baseline-controls.yaml`); isi v1 tersedia di tag `v1-final`. Panduan migrasi: [MIGRATION.md](MIGRATION.md).

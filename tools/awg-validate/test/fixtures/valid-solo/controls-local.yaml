@@ -1,0 +1,12 @@
+system: TOKO
+controls:
+  - id: SYS-TOKO-001
+    title: Pengurangan stok atomik
+    statement: Pengurangan stok saat checkout WAJIB atomik di dalam transaksi DB.
+    rationale: Fixture.
+    severity: critical
+    class: non_waivable
+    gate: G5
+    verification: Review kode transaksi.
+    evidence: [code]
+    source: team

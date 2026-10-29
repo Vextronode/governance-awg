@@ -4,6 +4,17 @@ Dokumen ini memetakan isi `governance-awg` v1 ke struktur AWG v2 (Baseline · Mo
 
 **Riwayat v1:** seluruh file v1 (`AWG_QC/`, `AWG_OBS/`, `AWG_SEC/`) dihapus dari branch utama di v2.0.0. Isinya tetap tersedia lewat tag git `v1-final` (HEAD terakhir sebelum refactor), mis. `git show v1-final:AWG_SEC/001-SECURITY_BASELINE_POLICY.md`.
 
+## v2.0.0 → v2.1.0
+
+v2.1.0 menambahkan mode tata kelola `solo` ([RFC-0002](rfc/0002-operating-modes.md)). Katalog kontrol tidak berubah.
+
+- Repo sistem **tidak wajib** upgrade.
+- Bila ingin upgrade, buat PR di repo sistem yang mengubah `version` di `docs/awg/awg.lock.yaml` serta `awg_version` di `profile.yaml` dan `status.yaml` menjadi `v2.1.0`.
+- Bila tetap memakai mode `team`, tidak ada perubahan lain: profil tanpa blok `governance` dianggap `team`.
+- Bila pindah ke mode `solo`, tambahkan blok `governance` (`mode: solo`, `since`, `reason`, `owner`) sesuai [framework 09](00-framework/09-operating-modes.md). Verifikasi team yang sudah ada tetap sah dan dihitung (A.6).
+
+## v1 → v2.0.0
+
 ## 1. Pemetaan kontrol v1 (30 kontrol)
 
 Summary v1 yang menyebut 27 kontrol adalah salah hitung; jumlah sebenarnya 30.

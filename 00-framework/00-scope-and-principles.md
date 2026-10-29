@@ -84,3 +84,4 @@ Kalimat seperti "direkomendasikan bila kapasitas memungkinkan" **dilarang** dipa
 - [06-handoff-and-support.md](06-handoff-and-support.md) — handoff dan dukungan
 - [07-defect-severity-and-exit-criteria.md](07-defect-severity-and-exit-criteria.md) — severity defect dan exit criteria
 - [08-roles.md](08-roles.md) — peran
+- [09-operating-modes.md](09-operating-modes.md) — mode tata kelola `team` dan `solo`

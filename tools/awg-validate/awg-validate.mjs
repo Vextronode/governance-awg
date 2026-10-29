@@ -34,6 +34,10 @@ const SEVERITIES = ['critical', 'high', 'medium', 'low'];
 const CLASSES = ['non_waivable', 'waivable'];
 const STATUSES = ['not_started', 'in_progress', 'implemented', 'verified', 'rejected', 'waived', 'not_applicable'];
 const COORDINATOR_ROLES = ['devops_coordinator', 'qa_coordinator', 'program_coordinator'];
+// Mode tata kelola (RFC-0002). Role solo tidak dihitung di team (A.6); role team tidak dihitung di solo (S-7).
+const MODES = ['team', 'solo'];
+const SOLO_ROLES = ['self_review', 'external_reviewer'];
+const MODE_LINE = { team: 'Mode tata kelola: team', solo: 'Mode tata kelola: solo (verifikasi mandiri, bukan independen)' };
 const NORMATIVE = /(WAJIB|SEBAIKNYA|BOLEH)/;
 const SYSTEM_FILES = ['awg.lock.yaml', 'profile.yaml', 'controls-local.yaml', 'status.yaml', 'waivers.yaml', 'threat-model.yaml'];
 const GATE_MATRIX = 'catalog/GATE-MATRIX.md';
@@ -389,13 +393,24 @@ function runCatalog(opts) {
 
 // ---------------------------------------------------------------- sistem
 
-function verifiedEntries(entry) {
-  return asArray(entry?.verification).filter((v) => v?.result === 'verified');
+// Verifikasi yang dihitung pada mode tertentu: team mengabaikan role solo, solo hanya memakai role solo.
+function countedVerifications(entry, mode = 'team') {
+  const list = asArray(entry?.verification).filter(Boolean);
+  return mode === 'solo' ? list.filter((v) => SOLO_ROLES.includes(v.verifier_role)) : list.filter((v) => !SOLO_ROLES.includes(v.verifier_role));
 }
 
-function lastVerification(entry) {
-  const list = asArray(entry?.verification);
+function verifiedEntries(entry, mode = 'team') {
+  return countedVerifications(entry, mode).filter((v) => v?.result === 'verified');
+}
+
+function lastVerification(entry, mode = 'team') {
+  const list = countedVerifications(entry, mode);
   return list.length ? list[list.length - 1] : null;
+}
+
+// Entri verified di mode team yang hanya didukung verifikasi role solo (A.6).
+function onlySoloVerified(entry) {
+  return entry?.status === 'verified' && verifiedEntries(entry, 'team').length === 0 && verifiedEntries(entry, 'solo').length > 0;
 }
 
 function requiredVerifyCoordinator(control) {
@@ -407,6 +422,31 @@ function requiredVerifyCoordinator(control) {
 function requiredWaiverCoordinator(control) {
   if (control.layer === 'BASE') return WAIVER_COORDINATOR_BY_DOMAIN[control.domain];
   return null; // MOD/SYS: tidak ditetapkan RFC-0001; cukup satu Coordinator selain Program Coordinator.
+}
+
+function soloApproverEligible(a, govOwner, team) {
+  if (a.role === 'owner') return nonEmpty(govOwner) && normName(a.name) === normName(govOwner);
+  if (a.role === 'external_reviewer') return !team.has(normName(a.name));
+  return false;
+}
+
+// W-3: untuk satu kontrol, waiver ke-3 dan seterusnya (urut approved_at, semua status) wajib disetujui external_reviewer.
+function checkSoloWaiverRenewals(waivers, team, file, report) {
+  const byControl = new Map();
+  for (const w of waivers.values()) {
+    if (!byControl.has(w.control)) byControl.set(w.control, []);
+    byControl.get(w.control).push(w);
+  }
+  for (const [control, list] of byControl) {
+    list.sort((a, b) => String(a.approved_at).localeCompare(String(b.approved_at)) || String(a.id).localeCompare(String(b.id)));
+    list.slice(2).forEach((w, i) => {
+      const external = asArray(w.approved_by).some((a) => a?.role === 'external_reviewer' && nonEmpty(a.name) && !team.has(normName(a.name)));
+      if (!external) {
+        report.error('solo-waiver-renewal', file,
+          `${w.id}: waiver ke-${i + 3} untuk ${control} wajib disetujui external_reviewer di luar system.team (W-3)`);
+      }
+    });
+  }
 }
 
 function waiverIsValid(waiver, controlId, now) {
@@ -450,6 +490,24 @@ function runSystem(opts) {
 
   const systemId = profile?.system?.id;
   const team = new Set([...asArray(profile?.system?.team), profile?.system?.tech_lead].filter(nonEmpty).map(normName));
+
+  // Mode tata kelola (RFC-0002 A.1). Blok governance tidak ada = team.
+  const governance = profile?.governance;
+  let mode = 'team';
+  if (governance !== undefined && governance !== null) {
+    if (MODES.includes(governance.mode)) mode = governance.mode;
+    else report.error('governance-mode', files['profile.yaml'], `governance.mode harus team atau solo (diterima: ${governance.mode})`);
+  }
+  const teamList = new Set(asArray(profile?.system?.team).filter(nonEmpty).map(normName));
+  const govOwner = governance?.owner;
+  if (mode === 'solo') {
+    if (!nonEmpty(governance.reason) || !nonEmpty(govOwner)) {
+      report.error('governance-solo-fields', files['profile.yaml'], 'mode solo wajib mengisi governance.reason dan governance.owner (RFC-0002 A.1)');
+    }
+    if (nonEmpty(govOwner) && !teamList.has(normName(govOwner))) {
+      report.error('governance-owner', files['profile.yaml'], `governance.owner ${govOwner} tidak tercantum di system.team (RFC-0002 A.1)`);
+    }
+  }
 
   // Versi
   if (lock && profile && profile.awg_version !== lock.version) {
@@ -543,6 +601,14 @@ function runSystem(opts) {
       else if (days > 90) report.error('waiver-duration', waiverFile, `${w.id}: masa berlaku ${days} hari melebihi 90 hari (D.2)`);
     }
     const approvers = asArray(w.approved_by).filter((a) => a && nonEmpty(a.name));
+    if (mode === 'solo') {
+      // W-1: minimal satu penyetuju owner (= governance.owner) atau external_reviewer di luar system.team.
+      if (!approvers.some((a) => soloApproverEligible(a, govOwner, team))) {
+        report.error('solo-waiver-approvers', waiverFile,
+          `${w.id}: mode solo butuh penyetuju role owner (${govOwner || 'governance.owner'}) atau external_reviewer di luar system.team (W-1)`);
+      }
+      continue;
+    }
     const names = new Set(approvers.map((a) => normName(a.name)));
     const roles = approvers.map((a) => a.role);
     const needed = control ? requiredWaiverCoordinator(control) : null;
@@ -558,6 +624,7 @@ function runSystem(opts) {
       if (team.has(normName(a.name))) report.error('waiver-team-approver', waiverFile, `${w.id}: penyetuju ${a.name} adalah anggota tim sistem`);
     }
   }
+  if (mode === 'solo') checkSoloWaiverRenewals(waivers, team, waiverFile, report);
 
   // Status
   const entries = new Map();
@@ -575,7 +642,9 @@ function runSystem(opts) {
       report.error('status-unknown', statusFile, `${e.id} bukan kontrol yang berlaku (${why})`);
       continue;
     }
-    checkStatusEntry(e, control, { report, statusFile, waivers, team, systemId });
+    const ctx = { report, statusFile, waivers, team, systemId, mode, teamSize: teamList.size };
+    if (mode === 'solo') checkSoloStatusEntry(e, control, ctx);
+    else checkStatusEntry(e, control, ctx);
   }
   if (status) {
     for (const id of applicable.keys()) {
@@ -586,12 +655,15 @@ function runSystem(opts) {
   // Threat model
   if (tm) checkThreatModel(tm, files['threat-model.yaml'], applicable, report);
 
+  // A.5: baris mode dan rekap jalur verifikasi di bagian atas output --summary/--gate.
+  if (opts.summary || opts.gate) printMode(mode, applicable, entries);
+
   report.print();
 
   if (opts.summary) printSummary(applicable, entries, systemId);
 
   let blockers = [];
-  if (opts.gate) blockers = gateBlockers(opts.gate, applicable, entries, waivers, tm, profile, now);
+  if (opts.gate) blockers = gateBlockers(opts.gate, applicable, entries, waivers, tm, profile, now, mode);
   if (opts.gate) printGate(opts.gate, blockers, profile);
 
   return finish(report, blockers.length);
@@ -616,7 +688,11 @@ function checkStatusEntry(e, control, ctx) {
       if (!asArray(e.evidence).some((ev) => nonEmpty(ev?.ref))) {
         report.error('status-evidence', statusFile, `${id}: verified wajib punya evidence dengan ref konkret (C.4)`);
       }
-      if (verified.length === 0 || last?.result !== 'verified') {
+      if (onlySoloVerified(e)) {
+        // A.6: verifikasi role solo tidak dihitung di team; entri menjadi pemblokir gate, bukan error.
+        report.warn('solo-verification-in-team', statusFile,
+          `${id}: verified hanya didukung self_review/external_reviewer; di mode team tidak dihitung dan wajib diverifikasi ulang (framework 03)`);
+      } else if (verified.length === 0 || last?.result !== 'verified') {
         report.error('status-verification', statusFile, `${id}: verified wajib punya blok verification dengan result verified (C.4, E.2)`);
       } else {
         if (control.severity === 'critical') {
@@ -665,8 +741,100 @@ function checkStatusEntry(e, control, ctx) {
 
   for (const v of asArray(e.verification)) {
     if (!v) continue;
+    if (SOLO_ROLES.includes(v.verifier_role)) {
+      // A.6: role solo tidak dihitung di team. self_review di luar entri verified adalah error.
+      if (v.verifier_role === 'self_review' && e.status !== 'verified') {
+        report.error('self-review-in-team', statusFile, `${id}: verifikasi self_review oleh ${v.verifier} tidak berlaku di mode team (RFC-0002 A.2)`);
+      }
+      continue;
+    }
     if (team.has(normName(v.verifier)) || (v.verifier_role === 'rotation' && systemId && v.verifier_system === systemId)) {
       report.error('verifier-team-member', statusFile, `${id}: verifikator ${v.verifier} adalah anggota tim sistem (E.2)`);
+    }
+  }
+}
+
+function checkSoloStatusEntry(e, control, ctx) {
+  const { report, statusFile, waivers, team, teamSize } = ctx;
+  const id = e.id;
+  const counted = countedVerifications(e, 'solo');
+  const verified = counted.filter((v) => v.result === 'verified');
+  const last = counted.length ? counted[counted.length - 1] : null;
+  const hasRef = asArray(e.evidence).some((ev) => nonEmpty(ev?.ref));
+  const implementedAt = typeof e.implemented_at === 'string' ? e.implemented_at : null;
+
+  if (['implemented', 'verified'].includes(e.status) && !implementedAt) {
+    report.error('solo-implemented-at', statusFile, `${id}: mode solo wajib mengisi implemented_at untuk status ${e.status} (RFC-0002 A.2)`);
+  }
+
+  switch (e.status) {
+    case 'in_progress':
+      if (!nonEmpty(e.owner)) report.error('status-owner', statusFile, `${id}: in_progress wajib punya owner (C.4)`);
+      break;
+    case 'implemented':
+      if (!hasRef) report.error('status-evidence', statusFile, `${id}: implemented wajib punya evidence dengan ref konkret (C.4)`);
+      break;
+    case 'verified':
+      if (!hasRef) report.error('status-evidence', statusFile, `${id}: verified wajib punya evidence dengan ref konkret (C.4)`);
+      if (verified.length === 0 || last?.result !== 'verified') {
+        report.error('solo-verification', statusFile, `${id}: verified butuh verifikasi self_review atau external_reviewer dengan result verified (S-1)`);
+      } else if (control.severity === 'critical') {
+        const external = verified.some((v) => v.verifier_role === 'external_reviewer' && !team.has(normName(v.verifier)));
+        const self = verified.some((v) => v.verifier_role === 'self_review');
+        const runnable = asArray(e.evidence).some((ev) => ['test', 'ci_run'].includes(ev?.type) && nonEmpty(ev?.ref));
+        if (!external && !(self && runnable)) {
+          report.error('solo-critical-evidence', statusFile,
+            `${id}: kontrol critical butuh verifikasi external_reviewer, atau self_review dengan evidence test/ci_run (S-6)`);
+        }
+      }
+      break;
+    case 'rejected':
+      if (!last || last.result !== 'rejected' || !nonEmpty(last.note)) {
+        report.error('status-rejected', statusFile, `${id}: rejected wajib punya verification terakhir dengan result rejected dan note (C.4)`);
+      }
+      break;
+    case 'waived': {
+      if (control.class !== 'waivable') {
+        report.error('status-waiver', statusFile, `${id}: kontrol non_waivable tidak boleh berstatus waived (C.3)`);
+        break;
+      }
+      const waiver = waivers.get(e.waiver);
+      if (!waiver) report.error('status-waiver', statusFile, `${id}: waiver ${e.waiver} tidak ada di waivers.yaml`);
+      else if (waiver.control !== id) report.error('status-waiver', statusFile, `${id}: waiver ${e.waiver} untuk kontrol ${waiver.control}`);
+      else if (waiver.status !== 'active') report.error('status-waiver', statusFile, `${id}: waiver ${e.waiver} berstatus ${waiver.status}, bukan active`);
+      break;
+    }
+    case 'not_applicable':
+      if (control.layer === 'BASE') {
+        report.error('status-na-base', statusFile, `${id}: kontrol BASE tidak boleh not_applicable; gunakan waiver (C.4)`);
+      } else if (!nonEmpty(e.reason) || verified.length === 0) {
+        report.error('status-na', statusFile, `${id}: not_applicable wajib punya reason dan verification yang menyetujui (C.4)`);
+      }
+      break;
+    default:
+      break;
+  }
+
+  for (const v of asArray(e.verification)) {
+    if (!v) continue;
+    if (!SOLO_ROLES.includes(v.verifier_role)) {
+      report.warn('solo-role-ignored', statusFile, `${id}: role ${v.verifier_role} (${v.verifier}) tidak dipakai di mode solo dan tidak dihitung (S-7)`);
+      continue;
+    }
+    if (v.verifier_role === 'external_reviewer') {
+      if (team.has(normName(v.verifier))) {
+        report.error('external-team-member', statusFile, `${id}: external_reviewer ${v.verifier} tercantum di system.team (S-5)`);
+      }
+      continue;
+    }
+    // self_review
+    if (implementedAt && typeof v.date === 'string' && daysBetween(implementedAt, v.date) < 1) {
+      report.error('solo-cooling-off', statusFile,
+        `${id}: self_review ${v.date} harus minimal 1 hari kalender setelah implemented_at ${implementedAt} (S-2)`);
+    }
+    if (!nonEmpty(v.note)) report.error('solo-note', statusFile, `${id}: self_review wajib punya note berisi apa yang diperiksa (S-3)`);
+    if (teamSize >= 2 && nonEmpty(e.owner) && normName(v.verifier) === normName(e.owner)) {
+      report.error('solo-self-owner', statusFile, `${id}: self_review oleh ${v.verifier}, owner entri ini; tim ${teamSize} orang wajib direview orang lain (S-4)`);
     }
   }
 }
@@ -707,7 +875,7 @@ function checkThreatModel(tm, file, applicable, report) {
   }
 }
 
-function gateBlockers(gate, applicable, entries, waivers, tm, profile, now) {
+function gateBlockers(gate, applicable, entries, waivers, tm, profile, now, mode = 'team') {
   const target = gateIndex(gate);
   const adoptionGate = profile?.adoption?.gate_at_adoption;
   const adoptionIdx = GATES.includes(adoptionGate) ? gateIndex(adoptionGate) : -1;
@@ -716,11 +884,14 @@ function gateBlockers(gate, applicable, entries, waivers, tm, profile, now) {
     const idx = gateIndex(control.gate);
     if (idx < 0 || idx > target) continue;
     const entry = entries.get(control.id);
-    const st = entry?.status ?? 'tidak ada di status.yaml';
+    let st = entry?.status ?? 'tidak ada di status.yaml';
     let ok = false;
-    if (st === 'verified') ok = true;
-    else if (st === 'waived') ok = control.class === 'waivable' && waiverIsValid(waivers.get(entry.waiver), control.id, now);
-    else if (st === 'not_applicable') ok = control.layer !== 'BASE' && verifiedEntries(entry).length > 0;
+    if (st === 'verified') {
+      // A.6: di team, verified yang hanya didukung role solo dihitung sebagai implemented.
+      ok = !(mode === 'team' && onlySoloVerified(entry));
+      if (!ok) st = 'implemented (verified hanya self_review/external_reviewer)';
+    } else if (st === 'waived') ok = control.class === 'waivable' && waiverIsValid(waivers.get(entry.waiver), control.id, now);
+    else if (st === 'not_applicable') ok = control.layer !== 'BASE' && verifiedEntries(entry, mode).length > 0;
     if (!ok) {
       blockers.push({ id: control.id, title: control.title, gate: control.gate, severity: control.severity, status: st, retro: idx <= adoptionIdx });
     }
@@ -741,6 +912,21 @@ function gateBlockers(gate, applicable, entries, waivers, tm, profile, now) {
     }
   }
   return blockers;
+}
+
+function printMode(mode, applicable, entries) {
+  let external = 0;
+  let selfOnly = 0;
+  for (const id of applicable.keys()) {
+    const entry = entries.get(id);
+    if (entry?.status !== 'verified') continue;
+    const solo = verifiedEntries(entry, 'solo');
+    if (solo.some((v) => v.verifier_role === 'external_reviewer')) external += 1;
+    else if (solo.some((v) => v.verifier_role === 'self_review')) selfOnly += 1;
+  }
+  console.log(MODE_LINE[mode]);
+  console.log(`Kontrol verified lewat external_reviewer: ${external}; lewat self_review saja: ${selfOnly}`);
+  console.log('');
 }
 
 function printGate(gate, blockers, profile) {

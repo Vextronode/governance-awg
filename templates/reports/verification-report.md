@@ -10,7 +10,12 @@
 | Gate yang diklaim | |
 | Tanggal | |
 | Versi AWG (`awg.lock.yaml`) | |
+| Mode tata kelola (`governance.mode`) | team / solo |
 | Tech Lead (pengaju) | |
+
+> **Wajib bila mode `solo`** (RFC-0002 A.5): pertahankan kalimat berikut apa adanya, dan hapus blok ini bila mode `team`.
+>
+> *Verifikasi dilakukan secara mandiri. Status `verified` di laporan ini bukan hasil verifikasi independen lintas tim.*
 
 ## 2. Output validator
 
@@ -47,10 +52,13 @@ Perintah: `awg-validate system --governance <path> --awg docs/awg --gate <Gx> --
 | S3 | | |
 | S4 | | |
 
-## 7. Keputusan Program Coordinator
+## 7. Keputusan gate
+
+Diputuskan Program Coordinator (mode `team`) atau `governance.owner` (mode `solo`, framework 09 §6).
 
 | Field | Nilai |
 |---|---|
+| Pemutus | Program Coordinator / governance.owner |
 | Keputusan | Lulus / Tidak lulus |
 | Catatan | |
 | Nama | |

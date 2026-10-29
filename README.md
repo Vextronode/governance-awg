@@ -4,7 +4,17 @@ Standar kualitas, keamanan, dan privasi Architecture Working Group (AWG) untuk s
 
 Repo ini adalah **satu-satunya sumber definisi kontrol**. Status kepatuhan tiap sistem tidak disimpan di sini, melainkan di folder `docs/awg/` repo masing-masing sistem, dan diperiksa dengan validator dari repo ini.
 
-Versi saat ini: **v2.0.0** ([CHANGELOG](CHANGELOG.md)). Migrasi dari v1: [MIGRATION.md](MIGRATION.md).
+Versi saat ini: **v2.1.0** ([CHANGELOG](CHANGELOG.md)). Migrasi dari v1: [MIGRATION.md](MIGRATION.md).
+
+## Dua cara pakai
+
+Standar ini bisa dipakai dalam mode **`team`**, yaitu beberapa tim saling memverifikasi secara rotasi dengan Coordinator sebagai verifikator kedua dan penyetuju waiver, atau mode **`solo`**, yaitu satu orang atau satu tim memakai standar ini sendiri tanpa tim lain maupun Coordinator terpisah. Mode hanya mengubah *siapa* yang memverifikasi; kontrol yang wajib sama persis. Mode dideklarasikan di blok `governance` pada `docs/awg/profile.yaml` (tanpa blok = `team`). Detail: [framework 09](00-framework/09-operating-modes.md).
+
+| | `team` | `solo` |
+|---|---|---|
+| Cocok untuk | Program dengan beberapa tim dan Coordinator (mis. Capstone Cibenda) | Proyek di luar program, proyek klien, proyek pribadi |
+| Verifikasi | Tim rotasi + Coordinator domain untuk kontrol `critical` | `self_review` di sesi terpisah dan/atau `external_reviewer`; tidak independen |
+| Waiver & gate | Disetujui Program Coordinator + Coordinator domain; gate diputuskan Program Coordinator | Disetujui `owner` (waiver ke-3 dst. wajib external reviewer); gate diputuskan `owner` |
 
 ## Model 3 lapis
 
@@ -92,3 +102,4 @@ Kontrol yang belum bisa dipenuhi dan berkelas `waivable` bisa diajukan sebagai w
 - [06 — Handoff & dukungan](00-framework/06-handoff-and-support.md)
 - [07 — Severity defect & exit criteria](00-framework/07-defect-severity-and-exit-criteria.md)
 - [08 — Peran](00-framework/08-roles.md)
+- [09 — Mode tata kelola team & solo](00-framework/09-operating-modes.md)

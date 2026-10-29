@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Vextronode/governance-awg/catalog/schema/waivers.schema.json",
   "title": "AWG v2 docs/awg/waivers.yaml",
-  "description": "Waiver sesuai RFC-0001 D.2 (M.5). Aturan lintas field (kontrol harus waivable, score = likelihood x impact, belum kedaluwarsa, maksimal 90 hari, Program Coordinator + Coordinator domain, penyetuju bukan anggota tim) ditegakkan di tools/awg-validate.",
+  "description": "Waiver sesuai RFC-0001 D.2 (M.5). Aturan lintas field (kontrol harus waivable, score = likelihood x impact, belum kedaluwarsa, maksimal 90 hari, Program Coordinator + Coordinator domain, penyetuju bukan anggota tim) ditegakkan di tools/awg-validate. RFC-0002: role owner/external_reviewer untuk mode solo; W-1 dan W-3 ditegakkan di tools/awg-validate.",
   "type": "object",
   "properties": {
     "waivers": { "type": "array", "items": { "$ref": "#/$defs/waiver" } }
@@ -16,7 +16,7 @@
       "type": "object",
       "properties": {
         "name": { "type": "string", "minLength": 1 },
-        "role": { "enum": ["program_coordinator", "devops_coordinator", "qa_coordinator"] }
+        "role": { "enum": ["program_coordinator", "devops_coordinator", "qa_coordinator", "owner", "external_reviewer"] }
       },
       "required": ["name", "role"],
       "additionalProperties": false

@@ -55,3 +55,13 @@ Kontrol `critical` membutuhkan **dua** verifikasi: satu dari tim rotasi dan satu
 | PRIV, GOV | Program Coordinator |
 
 Program Coordinator memutuskan gate dan menyetujui waiver, tetapi **tidak** menjadi verifikator tunggal kontrol non-PRIV/GOV.
+
+## 5. Peran di mode solo
+
+Bagian 1–4 berlaku untuk mode `team`. Di mode `solo` ([09-operating-modes.md](09-operating-modes.md)) tidak ada tim rotasi maupun Coordinator terpisah; perannya menjadi:
+
+| Peran | Siapa | Tugas |
+|---|---|---|
+| Owner (`governance.owner`) | Penanggung jawab tunggal, tercantum di `system.team` | Memutuskan gate; menyetujui waiver (dibatasi W-3) |
+| Anggota tim (`system.team`) | Orang yang mengerjakan sistem | Implementasi kontrol; `self_review` di sesi terpisah (S-2 s.d. S-4) |
+| External reviewer | Orang di luar `system.team` (mis. dosen, staf IT mitra, rekan organisasi lain) | Verifikasi `external_reviewer` (S-5, S-6); persetujuan waiver ke-3 dan seterusnya (W-3) |

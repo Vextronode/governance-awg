@@ -1,0 +1,47 @@
+# Fixture invalid mode solo (solo-waiver-renewal). Waiver ke-3 untuk BASE-SEC-009 hanya disetujui owner (W-3).
+waivers:
+  - id: WVR-TOKO-001
+    control: BASE-SEC-009
+    reason: CSP belum bisa dipasang di hosting uji
+    risk:
+      likelihood: 2
+      impact: 1
+      score: 2
+    compensating_controls: Header lain sudah aktif
+    owner: Rina
+    approved_by:
+      - name: Rina
+        role: owner
+    approved_at: 2026-05-01
+    expires_at: 2026-07-15
+    status: closed
+  - id: WVR-TOKO-002
+    control: BASE-SEC-009
+    reason: CSP belum bisa dipasang di hosting uji
+    risk:
+      likelihood: 2
+      impact: 1
+      score: 2
+    compensating_controls: Header lain sudah aktif
+    owner: Rina
+    approved_by:
+      - name: Rina
+        role: owner
+    approved_at: 2026-07-16
+    expires_at: 2026-09-30
+    status: closed
+  - id: WVR-TOKO-003
+    control: BASE-SEC-009
+    reason: CSP belum bisa dipasang di hosting uji
+    risk:
+      likelihood: 2
+      impact: 1
+      score: 2
+    compensating_controls: Header lain sudah aktif
+    owner: Rina
+    approved_by:
+      - name: Rina
+        role: owner
+    approved_at: 2026-10-01
+    expires_at: 2026-12-15
+    status: active

@@ -18,6 +18,8 @@
 
 ## 2. Waiver
 
+> Aturan penyetuju di bagian ini berlaku untuk mode `team`. Untuk mode `solo`, penyetuju diatur W-1 dan W-3 di [09-operating-modes.md](09-operating-modes.md) §5; aturan waiver lainnya tetap berlaku.
+
 Disimpan di `docs/awg/waivers.yaml` repo sistem, di bawah key `waivers:`. Schema: [catalog/schema/waivers.schema.json](../catalog/schema/waivers.schema.json).
 
 | Field | Isi |

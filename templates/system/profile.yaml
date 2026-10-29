@@ -1,8 +1,14 @@
-# Profil sistem AWG v2 (format: RFC-0001 M.2, schema: catalog/schema/profile.schema.json)
+# Profil sistem AWG v2 (format: RFC-0001 M.2 + RFC-0002 A.1, schema: catalog/schema/profile.schema.json)
 # Isi hanya dengan fakta dari kode/konfigurasi atau jawaban Tech Lead. Yang belum diketahui: TODO(awg).
-awg_version: v2.0.0
+awg_version: v2.1.0
+governance:                   # mode tata kelola (RFC-0002, framework 09). Blok tidak ada = team
+  mode: team                  # team | solo
+  since: ""                   # tanggal mode ini mulai berlaku (YYYY-MM-DD); wajib diisi saat pindah ke solo
+  reason: ""                  # WAJIB untuk solo: mengapa verifikasi lintas tim tidak tersedia
+  owner: ""                   # WAJIB untuk solo: penanggung jawab tunggal; harus tercantum di system.team
+  external_reviewers: []      # opsional: nama orang DI LUAR system.team yang bersedia mereview
 system:
-  id: SID                     # SID | SIGAP | CIMART | VDASH | <baru, disetujui AWG>
+  id: SID                     # SID | SIGAP | CIMART | VDASH | ID lain berpola ^[A-Z][A-Z0-9]*$ (RFC-0002 A.7)
   name: ""
   repo: ""
   tech_lead: ""
