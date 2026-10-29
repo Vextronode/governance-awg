@@ -12,6 +12,8 @@
 
 ## 1. Alur
 
+> Alur dan aturan verifikasi di §1–§2 berlaku untuk mode `team`. Untuk mode `solo` (verifikasi mandiri, keputusan gate oleh `governance.owner`), lihat [09-operating-modes.md](09-operating-modes.md). Aturan gate §3–§5 berlaku di kedua mode.
+
 1. **Self-assessment:** tim memperbarui `status.yaml` menjadi `implemented` beserta bukti.
 2. **Verifikasi independen:** verifikator memeriksa bukti sesuai field `verification` kontrol, lalu mengisi blok `verification`.
 3. **Klaim gate:** Tech Lead menjalankan `awg-validate system --gate Gx`. Bila hasilnya bersih, Tech Lead membuat **laporan verifikasi gate** (`docs/awg/reports/gate-Gx-YYYY-MM-DD.md`, template [verification-report.md](../templates/reports/verification-report.md)) dan mengajukannya ke Program Coordinator.
