@@ -9,6 +9,7 @@ Folder ini berisi profil, status, dan bukti kepatuhan sistem ini terhadap standa
 | Sistem | `<ID>` — `<nama sistem>` |
 | Versi standar AWG | lihat `awg.lock.yaml` |
 | Tech Lead | lihat `profile.yaml` |
+| Mode tata kelola | lihat `profile.yaml` (`governance.mode`: `team` atau `solo`, framework 09 di repo pusat) |
 | Gate terakhir yang lulus | lihat `profile.yaml` (`current_gate`) |
 
 ## Isi folder

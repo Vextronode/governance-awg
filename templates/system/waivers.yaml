@@ -1,6 +1,8 @@
 # Waiver (format: RFC-0001 D.2 / M.5, schema: catalog/schema/waivers.schema.json)
 # Hanya untuk kontrol class: waivable. Maksimal 90 hari sejak disetujui atau tanggal target G7, mana yang lebih dulu.
-# Dua penyetuju: Program Coordinator dan Coordinator domain terkait; penyetuju bukan anggota tim sistem.
+# Mode team: dua penyetuju, Program Coordinator dan Coordinator domain terkait; penyetuju bukan anggota tim sistem.
+# Mode solo (framework 09 §5): minimal satu penyetuju role owner (= governance.owner) atau external_reviewer (W-1);
+# waiver ke-3 dan seterusnya untuk kontrol yang sama wajib disetujui external_reviewer (W-3).
 # Perpanjangan = waiver baru dengan ID baru.
 waivers: []
 # Contoh format (hapus tanda komentar dan sesuaikan):
@@ -16,3 +18,16 @@ waivers: []
 #    approved_at: "YYYY-MM-DD"
 #    expires_at: "YYYY-MM-DD"
 #    status: active                                  # active | expired | closed
+# Contoh mode solo (hapus tanda komentar dan sesuaikan):
+#  - id: WVR-TOKO-001
+#    control: BASE-SEC-009
+#    reason: ""
+#    risk: {likelihood: 2, impact: 1, score: 2}
+#    compensating_controls: ""
+#    owner: ""                                       # governance.owner
+#    approved_by:
+#      - {name: "", role: owner}                     # nama = governance.owner
+#      # - {name: "", role: external_reviewer}       # wajib mulai waiver ke-3 untuk kontrol yang sama
+#    approved_at: "YYYY-MM-DD"
+#    expires_at: "YYYY-MM-DD"
+#    status: active

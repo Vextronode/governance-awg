@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { FIXTURES, miniGovernance, run, tmpDir } from './helpers.mjs';
+import { parse, stringify } from 'yaml';
+import { FIXTURES, REPO_ROOT, miniGovernance, run, tmpDir } from './helpers.mjs';
 
 const gov = miniGovernance();
 const system = (awg, ...extra) => run(['system', '--governance', gov, '--awg', awg, ...extra]);
@@ -109,4 +110,35 @@ test('peralihan solo -> team: --gate mencantumkan kontrol tersebut sebagai pembl
   for (const id of ['BASE-GOV-001', 'BASE-SEC-001', 'SYS-TOKO-001']) {
     assert.match(r.out, new RegExp(`\\| ${id} \\|.*implemented \\(verified hanya self_review/external_reviewer\\)`));
   }
+});
+
+test('templates/system yang diisi data dummy minimal mode solo lulus terhadap katalog nyata', () => {
+  const dir = tmpDir('awg-templates-solo-');
+  fs.cpSync(path.join(REPO_ROOT, 'templates', 'system'), dir, { recursive: true });
+  const load = (name) => parse(fs.readFileSync(path.join(dir, name), 'utf8'));
+  const save = (name, data) => fs.writeFileSync(path.join(dir, name), stringify(data));
+
+  const profile = load('profile.yaml');
+  assert.equal(profile.governance.mode, 'team', 'default template harus team');
+  profile.system.id = 'TOKO';
+  profile.system.team = ['Rina'];
+  profile.governance = { mode: 'solo', since: '2026-11-01', reason: 'Dummy: proyek pribadi', owner: 'Rina', external_reviewers: [] };
+  profile.modules.active[0].reason = 'Dummy: menyimpan nomor HP';
+  profile.modules.active[0].evidence = ['src/models/customer.js'];
+  profile.modules.inactive[0].reason = 'Dummy: tidak ada transaksi';
+  save('profile.yaml', profile);
+
+  const ids = [];
+  const base = parse(fs.readFileSync(path.join(REPO_ROOT, 'catalog', 'baseline.yaml'), 'utf8'));
+  const pii = parse(fs.readFileSync(path.join(REPO_ROOT, 'catalog', 'modules', 'PII.yaml'), 'utf8'));
+  for (const c of [...base.controls, ...pii.controls]) ids.push(c.id);
+  const status = load('status.yaml');
+  const template = status.controls[0];
+  status.system = 'TOKO';
+  status.controls = ids.map((id) => ({ ...template, id }));
+  save('status.yaml', status);
+
+  const r = run(['system', '--governance', REPO_ROOT, '--awg', dir, '--summary']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /^Mode tata kelola: solo/m);
 });

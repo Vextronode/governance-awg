@@ -14,7 +14,7 @@
 # CONTOH: seluruh isi di bawah adalah sistem FIKTIF "Attendance Kiosk" (CONTOH SAJA),
 # hanya ilustrasi format. Ganti seluruhnya dengan sistem nyata sebelum diajukan.
 # =============================================================================
-awg_version: v2.0.0
+awg_version: v2.1.0
 
 system_info:
   system_name: "Attendance Kiosk (CONTOH SAJA)"
