@@ -2,10 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/Vextronode/governance-awg/catalog/schema/profile.schema.json",
   "title": "AWG v2 docs/awg/profile.yaml",
-  "description": "Profil sistem sesuai RFC-0001 M.2. Kesamaan awg_version dengan awg.lock.yaml dan keberadaan modul di katalog ditegakkan di tools/awg-validate.",
+  "description": "Profil sistem sesuai RFC-0001 M.2. Kesamaan awg_version dengan awg.lock.yaml dan keberadaan modul di katalog ditegakkan di tools/awg-validate. RFC-0002: blok governance opsional (tidak ada = team); kecocokan owner dengan system.team ditegakkan di tools/awg-validate.",
   "type": "object",
   "properties": {
     "awg_version": { "type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+$" },
+    "governance": { "$ref": "#/$defs/governance" },
     "system": {
       "type": "object",
       "properties": {
@@ -141,6 +142,24 @@
   "$defs": {
     "gateOrEmpty": { "type": "string", "pattern": "^(G[1-7])?$" },
     "dateOrEmpty": { "type": "string", "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$" },
+    "nonBlank": { "type": "string", "pattern": "\\S" },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["team", "solo"] },
+        "since": { "$ref": "#/$defs/dateOrEmpty" },
+        "reason": { "type": "string" },
+        "owner": { "type": "string" },
+        "external_reviewers": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "required": ["mode"],
+      "additionalProperties": false,
+      "if": { "properties": { "mode": { "const": "solo" } }, "required": ["mode"] },
+      "then": {
+        "properties": { "reason": { "$ref": "#/$defs/nonBlank" }, "owner": { "$ref": "#/$defs/nonBlank" } },
+        "required": ["reason", "owner"]
+      }
+    },
     "moduleId": {
       "description": "Keberadaan modul di catalog/modules/ diperiksa tools/awg-validate.",
       "type": "string",
