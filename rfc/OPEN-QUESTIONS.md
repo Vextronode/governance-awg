@@ -12,6 +12,7 @@ Pertanyaan yang belum bisa diputuskan oleh pelaksana refactor dan butuh keputusa
 6. Angka default (PERF-001 p95, PERF-006 LCP, retensi OBS-008/DATA-003, idle timeout) adalah usulan AWG. Bila tim membantahnya dengan data, ubah lewat PR ke katalog (MAJOR bila memperketat).
 7. Program Gates Guide (dokumen PM): bagian G3 "API Specification (Draft)" berisi poin yang sama dengan Architecture Document, dan "Village Dashboard Gate" disebut tanpa definisi. Usulkan revisi ke PM; dokumen PM tidak diubah oleh refactor ini.
 8. Username GitHub untuk CODEOWNERS. Saat ini `.github/CODEOWNERS` berisi placeholder `TODO(awg)` (pengguna memilih placeholder saat refactor).
+   **Selesai (2026-10-29):** `/catalog/`, `/00-framework/`, dan `/seeds/` dimiliki `@spectraVal` (satu orang untuk semua peran Coordinator, keputusan sadar pengguna).
 
 ## B. Muncul selama refactor v2.0.0
 
