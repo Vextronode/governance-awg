@@ -1,0 +1,89 @@
+# Fixture peralihan solo -> team: BASE-SEC-009 kembali not_started karena waiver dihapus.
+awg_version: v2.1.0
+system: TOKO
+controls:
+  - id: BASE-GOV-001
+    status: verified
+    implemented_at: 2026-10-01
+    owner: Rina
+    evidence:
+      - type: document
+        ref: docs/awg/threat-model.yaml
+        note: ""
+    waiver: null
+    reason: null
+    verification:
+      - verifier: Rina
+        verifier_role: self_review
+        verifier_system: TOKO
+        date: 2026-10-03
+        result: verified
+        note: Validator lulus; semua trust boundary punya finding
+    notes: ""
+  - id: BASE-PRIV-001
+    status: implemented
+    implemented_at: 2026-10-05
+    owner: Rina
+    evidence:
+      - type: document
+        ref: docs/data-dictionary.md
+        note: ""
+    waiver: null
+    reason: null
+    verification: []
+    notes: ""
+  - id: BASE-SEC-001
+    status: verified
+    implemented_at: 2026-10-05
+    owner: Rina
+    evidence:
+      - type: code
+        ref: src/auth/session.js
+        note: ""
+      - type: test
+        ref: test/login.test.js
+        note: lulus di CI
+    waiver: null
+    reason: null
+    verification:
+      - verifier: Rina
+        verifier_role: self_review
+        verifier_system: TOKO
+        date: 2026-10-07
+        result: verified
+        note: Memakai express-session; test login dan logout lulus
+    notes: ""
+  - id: BASE-SEC-009
+    status: not_started
+    owner: Rina
+    evidence: []
+    waiver: null
+    reason: null
+    verification: []
+    notes: ""
+  - id: BASE-QA-001
+    status: in_progress
+    owner: Rina
+    evidence: []
+    waiver: null
+    reason: null
+    verification: []
+    notes: ""
+  - id: SYS-TOKO-001
+    status: verified
+    implemented_at: 2026-10-08
+    owner: Rina
+    evidence:
+      - type: code
+        ref: src/checkout/stock.js
+        note: ""
+    waiver: null
+    reason: null
+    verification:
+      - verifier: Pak Hadi
+        verifier_role: external_reviewer
+        verifier_system: EXT
+        date: 2026-10-10
+        result: verified
+        note: UPDATE ... WHERE stock >= ? di dalam transaksi
+    notes: ""

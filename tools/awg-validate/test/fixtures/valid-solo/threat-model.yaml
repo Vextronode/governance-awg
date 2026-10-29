@@ -1,0 +1,37 @@
+awg_version: v2.1.0
+system_info:
+  system_name: Toko Uji
+  tech_lead: Rina
+  last_updated: "2026-10-20"
+  program_gate_at_submission: G3
+review:
+  reviewer: Rina
+  date: "2026-10-21"
+  note: Self review (mode solo)
+dfd_elements:
+  external_entities:
+    - {name: Pembeli, description: Pengguna, trust_level: untrusted}
+  processes:
+    - {name: Checkout, description: Proses checkout, data_classification_touched: [Transactional - Restricted]}
+  data_stores:
+    - {name: DB, description: Database, data_classification: Transactional - Restricted}
+  data_flows:
+    - {name: Order, source: Pembeli, destination: Checkout, data_classification: Transactional - Restricted, crosses_trust_boundary: true}
+trust_boundaries:
+  - {boundary_id: TB-01, description: publik -> sesi pembeli, elements_involved: [Pembeli, Checkout]}
+stride_findings:
+  - finding_id: TOKO-001
+    element: Checkout
+    trust_boundary_ref: TB-01
+    stride_category: Tampering
+    threat_description: Harga diubah dari klien.
+    likelihood: 2
+    impact: 2
+    score: 4
+    risk_rating: medium
+    related_controls: [SYS-TOKO-001]
+    mitigation: Hitung total di server.
+    mitigation_status: in_progress
+    owner: Rina
+    verification_evidence: ""
+    source: team
